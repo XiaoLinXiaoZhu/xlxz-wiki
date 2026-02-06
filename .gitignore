@@ -1,0 +1,15 @@
+node_modules
+
+
+# reference
+reference/
+
+# vuepress
+*/.vuepress/.cache/
+*/.vuepress/.temp/
+
+# vuepress 别名
+*/vuepress/.cache/
+*/vuepress/.temp/
+
+data/

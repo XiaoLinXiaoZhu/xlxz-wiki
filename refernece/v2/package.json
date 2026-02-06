@@ -1,0 +1,55 @@
+{
+  "name": "xlxz-wiki-v2",
+  "version": "1.0.0",
+  "description": "游戏策划案文档系统 - 基于VuePress的词条悬停卡片系统",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vuepress dev docs",
+    "build": "vuepress build docs",
+    "build:single": "pnpm run build && node create-single-file.js",
+    "build:offline": "pnpm run build && node create-offline-package.js",
+    "serve:bun": "bun run bun-server.ts",
+    "bundle:bun:win": "bun build bun-server.ts --compile --outfile wiki-offline.exe",
+    "test": "node tests/wiki-syntax.test.js",
+    "test:jest": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src --ext .ts,.vue",
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "game-design",
+    "documentation",
+    "vuepress",
+    "wiki"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bun": "^1.2.19",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
+    "@vuepress/bundler-vite": "2.0.0-rc.24",
+    "@vuepress/client": "2.0.0-rc.24",
+    "@vuepress/core": "2.0.0-rc.24",
+    "@vuepress/plugin-register-components": "2.0.0-rc.112",
+    "@vuepress/plugin-search": "2.0.0-rc.112",
+    "@vuepress/theme-default": "2.0.0-rc.112",
+    "@vuepress/utils": "2.0.0-rc.24",
+    "chokidar": "^4.0.3",
+    "eslint": "^9.32.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.1",
+    "typescript": "^5.9.2",
+    "vue": "^3.5.18",
+    "vuepress": "2.0.0-rc.24"
+  },
+  "dependencies": {
+    "fs-extra": "^11.3.1",
+    "gray-matter": "^4.0.3",
+    "html-minifier-terser": "^7.2.0",
+    "markdown-it": "^14.1.0",
+    "markdown-it-container": "^4.0.0"
+  }
+}

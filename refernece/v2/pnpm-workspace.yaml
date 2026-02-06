@@ -1,0 +1,4 @@
+ignoredBuiltDependencies:
+  - esbuild
+  - highlight.js
+  - vue-demi

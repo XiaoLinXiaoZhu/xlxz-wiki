@@ -10,8 +10,19 @@ permissions:
 
 jobs:
   build:
-    name: Build & Release
-    runs-on: windows-latest
+    name: Build (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: bun-windows-x64
+            artifact: xlxz-wiki-windows-x64.exe
+          - target: bun-linux-x64
+            artifact: xlxz-wiki-linux-x64
+          - target: bun-darwin-x64
+            artifact: xlxz-wiki-macos-x64
+          - target: bun-darwin-arm64
+            artifact: xlxz-wiki-macos-arm64
 
     steps:
       - name: Checkout
@@ -43,10 +54,28 @@ jobs:
         run: bun run scripts/generate-embedded.ts
 
       - name: Compile executable
-        run: bun build --compile --target=bun-windows-x64 --outfile=xlxz-wiki.exe server/index.ts
+        run: bun build --compile --target=${{ matrix.target }} --outfile=${{ matrix.artifact }} server/index.ts
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          files: xlxz-wiki.exe
+          files: artifacts/*
           generate_release_notes: true

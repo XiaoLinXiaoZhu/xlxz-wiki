@@ -20,7 +20,7 @@ import (
 	"xlxz-wiki/ws"
 )
 
-//go:embed dist/*
+//go:embed dist/* dist/assets/*
 var distFS embed.FS
 
 var (
@@ -61,25 +61,38 @@ func main() {
 	if hasEmbeddedDist() {
 		// 编译模式：从内嵌资源读取
 		distSub, _ := fs.Sub(distFS, "dist")
-		fileServer := http.FileServer(http.FS(distSub))
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			// SPA 回退
 			path := r.URL.Path
-			if path != "/" && !strings.Contains(path, ".") {
-				r.URL.Path = "/"
+			// 尝试读取静态文件
+			if path != "/" {
+				filePath := strings.TrimPrefix(path, "/")
+				if content, err := fs.ReadFile(distSub, filePath); err == nil {
+					// 设置正确的 MIME 类型
+					contentType := getMimeType(filePath)
+					w.Header().Set("Content-Type", contentType)
+					w.Write(content)
+					return
+				}
 			}
-			fileServer.ServeHTTP(w, r)
+			// SPA 回退：返回 index.html
+			indexContent, _ := fs.ReadFile(distSub, "index.html")
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(indexContent)
 		})
 	} else if dirExists(distDir) {
 		// 开发模式：从文件系统读取
-		fileServer := http.FileServer(http.Dir(distDir))
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 			path := r.URL.Path
-			if path != "/" && !strings.Contains(path, ".") {
-				http.ServeFile(w, r, filepath.Join(distDir, "index.html"))
-				return
+			// 尝试读取静态文件
+			if path != "/" {
+				filePath := filepath.Join(distDir, path)
+				if info, err := os.Stat(filePath); err == nil && !info.IsDir() {
+					http.ServeFile(w, r, filePath)
+					return
+				}
 			}
-			fileServer.ServeHTTP(w, r)
+			// SPA 回退：返回 index.html
+			http.ServeFile(w, r, filepath.Join(distDir, "index.html"))
 		})
 	} else {
 		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -182,6 +195,38 @@ func hasEmbeddedDist() bool {
 func dirExists(path string) bool {
 	info, err := os.Stat(path)
 	return err == nil && info.IsDir()
+}
+
+func getMimeType(filePath string) string {
+	ext := strings.ToLower(filepath.Ext(filePath))
+	switch ext {
+	case ".html":
+		return "text/html; charset=utf-8"
+	case ".css":
+		return "text/css; charset=utf-8"
+	case ".js":
+		return "application/javascript; charset=utf-8"
+	case ".json":
+		return "application/json; charset=utf-8"
+	case ".png":
+		return "image/png"
+	case ".jpg", ".jpeg":
+		return "image/jpeg"
+	case ".gif":
+		return "image/gif"
+	case ".svg":
+		return "image/svg+xml"
+	case ".ico":
+		return "image/x-icon"
+	case ".woff":
+		return "font/woff"
+	case ".woff2":
+		return "font/woff2"
+	case ".ttf":
+		return "font/ttf"
+	default:
+		return "application/octet-stream"
+	}
 }
 
 func findAvailablePort(start, maxAttempts int) int {

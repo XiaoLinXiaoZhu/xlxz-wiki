@@ -12,7 +12,7 @@ dist/
 .wiki-cache/
 
 # reference 目录（仅供参考，不参与构建）
-reference/
+# reference/
 
 # vuepress 缓存（参考项目残留）
 */.vuepress/.cache/

@@ -1,0 +1,36 @@
+{
+  "version": "1.0",
+  "caches": [
+    {
+      "id": "1",
+      "query": "Where is the wiki indexer or term parsing logic implemented in the v2 and v3 reference code?",
+      "tags": [
+        "where",
+        "is",
+        "the",
+        "wiki",
+        "indexer",
+        "or",
+        "term",
+        "parsing",
+        "logic",
+        "implemented",
+        "in",
+        "v2",
+        "and",
+        "v3",
+        "reference",
+        "code"
+      ],
+      "scope": {
+        "directories": "e:/_Project/xlxz-wiki/refernece/v2,e:/_Project/xlxz-wiki/refernece/v3",
+        "filePatterns": "*.ts,*.js",
+        "excludes": "node_modules,*.lock,dist,.cache,.temp"
+      },
+      "createdAt": "2026-02-06T19:06:20.149Z",
+      "gitCommit": "d183d9e45dafb516c7c800f1490a98c4ee517b02",
+      "ttlHours": 168,
+      "schema": "{\"type\":\"object\",\"properties\":{\"files\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"summary\":{\"type\":\"string\"}}}"
+    }
+  ]
+}

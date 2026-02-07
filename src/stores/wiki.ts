@@ -1,0 +1,107 @@
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import type { WikiIndex, FileTreeNode } from '@shared/types'
+
+export const useWikiStore = defineStore('wiki', () => {
+  // ─── 状态 ─────────────────────────────────────────────────
+
+  /** 全局索引 */
+  const index = ref<WikiIndex>({
+    terms: {},
+    formulas: {},
+    scopes: [],
+    buildTime: 0,
+  })
+
+  /** 文件树 */
+  const fileTree = ref<FileTreeNode[]>([])
+
+  /** 当前查看的文件路径（相对于 wiki-docs/） */
+  const currentFile = ref('')
+
+  /** 当前文件的 Markdown 原文 */
+  const currentContent = ref('')
+
+  /** 当前作用域 */
+  const currentScope = ref('')
+
+  /** 模式：只读 / 编辑（阶段二） */
+  const mode = ref<'readonly' | 'edit'>('readonly')
+
+  /** 加载状态 */
+  const loading = ref(false)
+
+  // ─── 计算属性 ─────────────────────────────────────────────
+
+  /** 当前文件名 */
+  const currentFileName = computed(() => {
+    if (!currentFile.value) return ''
+    const parts = currentFile.value.split('/')
+    return parts[parts.length - 1]
+  })
+
+  // ─── 操作 ─────────────────────────────────────────────────
+
+  /** 从后端获取索引 */
+  async function fetchIndex() {
+    try {
+      const res = await fetch('/api/index')
+      index.value = await res.json()
+    } catch (err) {
+      console.error('[Store] 获取索引失败:', err)
+    }
+  }
+
+  /** 从后端获取文件树 */
+  async function fetchFileTree() {
+    try {
+      const res = await fetch('/api/files')
+      fileTree.value = await res.json()
+    } catch (err) {
+      console.error('[Store] 获取文件树失败:', err)
+    }
+  }
+
+  /** 加载指定文件的内容 */
+  async function loadFile(filePath: string) {
+    if (!filePath) return
+    loading.value = true
+    currentFile.value = filePath
+    try {
+      const res = await fetch(`/api/file?path=${encodeURIComponent(filePath)}`)
+      if (res.ok) {
+        currentContent.value = await res.text()
+      } else {
+        currentContent.value = `> 加载失败: ${filePath}`
+      }
+    } catch (err) {
+      console.error('[Store] 加载文件失败:', err)
+      currentContent.value = `> 加载失败: ${filePath}`
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /** 更新索引（WebSocket 推送时调用） */
+  function updateIndex(newIndex: WikiIndex) {
+    index.value = newIndex
+  }
+
+  return {
+    // 状态
+    index,
+    fileTree,
+    currentFile,
+    currentContent,
+    currentScope,
+    mode,
+    loading,
+    // 计算属性
+    currentFileName,
+    // 操作
+    fetchIndex,
+    fetchFileTree,
+    loadFile,
+    updateIndex,
+  }
+})

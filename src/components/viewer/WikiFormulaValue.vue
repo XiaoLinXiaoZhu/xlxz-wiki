@@ -75,7 +75,7 @@ function onLeave() {
 
 .wiki-formula-value--design {
   color: #8250df;
-  font-style: italic;
+  font-weight: 600;
 }
 
 .wiki-formula-value--has-def {

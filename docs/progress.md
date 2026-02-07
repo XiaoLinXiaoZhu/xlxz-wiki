@@ -67,36 +67,48 @@
   - [x] 鼠标离开延迟关闭（150ms，cancelClose 取消祖先链关闭）
   - [x] 修复 `MarkdownViewer.vue` 中 gray-matter 的 Buffer 浏览器兼容问题（改为手动剥离 frontmatter）
 
-- [ ] **Day 4: 策划公式语法 + WikiFormula 组件增强**
-  - [ ] 公式内计算值/设计值可悬停查看定义
-  - [ ] 公式与词条索引联动
+- [x] **Day 4: 策划公式语法 + WikiFormula 组件增强**
+  - [x] `src/components/viewer/WikiFormulaValue.vue` — 公式内计算值/设计值可交互组件（悬停查看定义）
+  - [x] `src/components/viewer/WikiFormula.vue` — 重构为使用 WikiFormulaValue 子组件（替代纯 HTML 高亮）
+  - [x] `src/components/viewer/WikiHoverCard.vue` — 增强：词条定义 + 关联公式表达式同时展示
+  - [x] 公式内计算值/设计值可悬停查看定义（有定义时显示虚线下划线）
+  - [x] 公式与词条索引联动（HoverCard 同时查询 terms 和 formulas 索引）
+  - [x] `wiki-docs/角色系统/战斗公式.md` — 新增多公式测试文档
 
-- [ ] **Day 5: scope 优先级 + 近似匹配**
-  - [ ] `src/utils/term-resolver.ts` — scope 优先级解析（文件内定义 > 当前 scope > 全局 > 其他 scope）
-  - [ ] 近似匹配（编辑距离）— 未找到词条时提示相似项
+- [x] **Day 5: scope 优先级 + 近似匹配**
+  - [x] `src/utils/term-resolver.ts` — scope 优先级解析（文件内定义 > 当前 scope > 全局 > 其他 scope）+ scope 过滤 + 显式 scope 引用（【scope/词条】）
+  - [x] 近似匹配（Levenshtein 编辑距离）— 未找到词条时提示相似项（最多 5 个，距离 ≤ 3）
+  - [x] `src/stores/wiki.ts` — loadFile 时自动从 frontmatter 提取 scope
+  - [x] `src/components/viewer/WikiTerm.vue` — 集成 resolveTerm，支持 scope/词条 语法
+  - [x] `src/components/viewer/WikiHoverCard.vue` — 集成 resolveTerm + filterByScope，显示近似匹配建议
+  - [x] `src/components/viewer/WikiFormulaValue.vue` — 集成 resolveTerm
 
 ### Week 3: 集成与打包
 
-- [ ] **Day 1: 前端 WebSocket 客户端 + 实时更新**
-  - [ ] `src/services/websocket.ts` — WebSocket 客户端
-  - [ ] 文件变更时自动刷新当前文档 + 更新索引
+- [x] **Day 1: 前端 WebSocket 客户端 + 实时更新**
+  - [x] `src/services/websocket.ts` — WebSocket 客户端（自动重连，最多 10 次）
+  - [x] `src/App.vue` — 挂载时初始化 WebSocket 连接
+  - [x] 文件变更时自动刷新当前文档 + 更新索引（`file-changed` + `index-updated` 消息处理）
 
-- [ ] **Day 2: Chokidar 文件监听完善**
-  - [ ] 新增/删除文件时更新侧边栏文件树
-  - [ ] 编辑中文件被外部修改时提示
+- [x] **Day 2: Chokidar 文件监听完善**
+  - [x] 新增/删除文件时更新侧边栏文件树（WebSocket `file-changed` create/delete → `fetchFileTree()`）
+  - [ ] 编辑中文件被外部修改时提示（阶段二编辑器功能，暂不实现）
 
-- [ ] **Day 3: Bun compile 打包**
-  - [ ] `bun build --compile` 生成可执行程序
-  - [ ] 启动脚本（自动打开浏览器）
+- [x] **Day 3: Bun compile 打包**
+  - [x] `server/index.ts` — 路径解析兼容编译模式（`IS_COMPILED` 检测，`process.cwd()` 回退）
+  - [x] `package.json` — 添加 `compile` 和 `release` 脚本
+  - [x] `bun build --compile --target=bun-windows-x64` 生成可执行程序（~108MB）
+  - [x] 启动脚本（自动打开浏览器，已在 Day 2 Week 1 实现）
+  - [x] `.gitignore` — 忽略 `*.exe`
 
-- [ ] **Day 4: 测试 + Bug 修复**
-  - [ ] `tests/parser.test.ts` — frontmatter 解析、正文解析
-  - [ ] `tests/indexer.test.ts` — 索引构建、增量更新
-  - [ ] `tests/term-resolver.test.ts` — scope 优先级、近似匹配
+- [x] **Day 4: 测试 + Bug 修复**
+  - [x] `tests/parser.test.ts` — frontmatter 解析（alias/scope）、文件内定义、策划公式、代码块跳过（14 个测试）
+  - [x] `tests/term-resolver.test.ts` — scope 优先级排序、scope 过滤、显式 scope 引用、近似匹配、编辑距离（15 个测试）
+  - [ ] `tests/indexer.test.ts` — 索引构建、增量更新（可后续补充）
 
-- [ ] **Day 5: 文档完善**
-  - [ ] README.md — 使用说明
-  - [ ] 补充示例文档
+- [x] **Day 5: 文档完善**
+  - [x] `README.md` — 使用说明（功能特性、快速开始、文档语法、项目结构、技术栈）
+  - [x] `wiki-docs/角色系统/战斗公式.md` — 多公式示例文档（伤害/实际伤害/防御减伤比例）
 
 ---
 

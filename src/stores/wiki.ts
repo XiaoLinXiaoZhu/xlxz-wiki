@@ -70,16 +70,32 @@ export const useWikiStore = defineStore('wiki', () => {
     try {
       const res = await fetch(`/api/file?path=${encodeURIComponent(filePath)}`)
       if (res.ok) {
-        currentContent.value = await res.text()
+        const text = await res.text()
+        currentContent.value = text
+        // 从 frontmatter 提取 scope
+        currentScope.value = extractScope(text)
       } else {
         currentContent.value = `> 加载失败: ${filePath}`
+        currentScope.value = ''
       }
     } catch (err) {
       console.error('[Store] 加载文件失败:', err)
       currentContent.value = `> 加载失败: ${filePath}`
+      currentScope.value = ''
     } finally {
       loading.value = false
     }
+  }
+
+  /** 从 Markdown 原文中提取 frontmatter scope */
+  function extractScope(raw: string): string {
+    const trimmed = raw.trimStart()
+    if (!trimmed.startsWith('---')) return ''
+    const endIndex = trimmed.indexOf('---', 3)
+    if (endIndex === -1) return ''
+    const frontmatter = trimmed.slice(3, endIndex)
+    const match = frontmatter.match(/^scope:\s*(.+)$/m)
+    return match ? match[1].trim() : ''
   }
 
   /** 更新索引（WebSocket 推送时调用） */

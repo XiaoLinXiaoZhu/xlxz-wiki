@@ -4,8 +4,18 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, onUnmounted } from 'vue'
 import MainLayout from './components/layout/MainLayout.vue'
 import HoverCardLayer from './components/viewer/HoverCardLayer.vue'
+import { initWebSocket, closeWebSocket } from './services/websocket'
+
+onMounted(() => {
+  initWebSocket()
+})
+
+onUnmounted(() => {
+  closeWebSocket()
+})
 </script>
 
 <style>

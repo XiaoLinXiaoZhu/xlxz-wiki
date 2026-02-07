@@ -2,16 +2,17 @@
   <span
     ref="termRef"
     class="wiki-term"
-    :class="{ 'wiki-term--missing': !hasDef }"
+    :class="{ 'wiki-term--missing': !resolved.exact }"
     @mouseenter="onEnter"
     @mouseleave="onLeave"
-  >【{{ term }}】</span>
+  >【{{ displayName }}】</span>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, inject } from 'vue'
 import { useWikiStore } from '@/stores/wiki'
 import { useHoverCards } from '@/composables/useHoverCards'
+import { resolveTerm } from '@/utils/term-resolver'
 
 const props = defineProps<{
   term: string
@@ -26,8 +27,21 @@ const parentCardId = inject<string | null>('hoverCardId', null)
 
 let currentCardId: string | null = null
 
-const hasDef = computed(() => {
-  return !!(store.index.terms && store.index.terms[props.term])
+/** 解析显示名称（去掉 scope 前缀） */
+const displayName = computed(() => {
+  const slashIndex = props.term.indexOf('/')
+  if (slashIndex > 0) return props.term.slice(slashIndex + 1)
+  return props.term
+})
+
+/** 使用 term-resolver 解析词条 */
+const resolved = computed(() => {
+  return resolveTerm(
+    props.term,
+    store.index,
+    store.currentScope,
+    store.currentFile,
+  )
 })
 
 function onEnter() {

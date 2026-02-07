@@ -10,6 +10,9 @@
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "server:dev": "bun run --watch server/index.ts",
+    "server:start": "bun run server/index.ts",
+    "compile": "bun build --compile --target=bun-windows-x64 --outfile=xlxz-wiki.exe server/index.ts",
+    "release": "pnpm build && pnpm compile",
     "test": "bun test"
   },
   "dependencies": {

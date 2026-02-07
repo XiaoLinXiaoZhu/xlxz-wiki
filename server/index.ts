@@ -19,7 +19,13 @@ import { WikiIndexer } from './indexer/indexer'
 
 // ─── 路径解析 ───────────────────────────────────────────────
 
-const ROOT_DIR = resolve(import.meta.dir, '..')
+// 开发模式：import.meta.dir 指向 server/ 目录
+// 编译模式：import.meta.dir 不可用于外部文件访问，使用 process.cwd()
+const IS_COMPILED = !import.meta.dir.includes('server')
+const ROOT_DIR = IS_COMPILED
+  ? resolve(process.cwd())
+  : resolve(import.meta.dir, '..')
+
 const WIKI_DOCS_DIR = resolve(ROOT_DIR, 'wiki-docs')
 const DIST_DIR = resolve(ROOT_DIR, 'dist')
 const PORT = Number(process.env.PORT || 3055)

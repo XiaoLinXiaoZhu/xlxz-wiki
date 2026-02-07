@@ -7,11 +7,11 @@
     @mouseenter="onEnter"
     @mouseleave="onLeave"
   >
-    <!-- 多个定义按来源分组显示 -->
-    <div v-if="definitions.length > 0" class="wiki-hover-card__body">
+    <!-- 精确匹配：显示定义 + 关联公式 -->
+    <div v-if="resolved.exact && (filteredDefs.length > 0 || relatedFormulas.length > 0)" class="wiki-hover-card__body">
       <div
-        v-for="(def, i) in definitions"
-        :key="i"
+        v-for="(def, i) in filteredDefs"
+        :key="'def-' + i"
         class="wiki-hover-card__definition"
       >
         <div class="wiki-hover-card__source">
@@ -22,14 +22,42 @@
         <div class="wiki-hover-card__content">
           <HoverCardContent :content="def.definition" />
         </div>
-        <hr v-if="i < definitions.length - 1" class="wiki-hover-card__divider" />
+        <hr v-if="i < filteredDefs.length - 1 || relatedFormulas.length > 0" class="wiki-hover-card__divider" />
+      </div>
+
+      <!-- 关联的公式表达式 -->
+      <div
+        v-for="(formula, i) in relatedFormulas"
+        :key="'formula-' + i"
+        class="wiki-hover-card__formula"
+      >
+        <div class="wiki-hover-card__source">
+          公式 · 来自 {{ formula.filePath }}
+          <span v-if="formula.scope" class="wiki-hover-card__scope">（{{ formula.scope }}）</span>
+        </div>
+        <div class="wiki-hover-card__formula-expr">
+          <FormulaContent :formula="formula.expression" />
+        </div>
+        <hr v-if="i < relatedFormulas.length - 1" class="wiki-hover-card__divider" />
       </div>
     </div>
 
-    <!-- 未找到定义 -->
+    <!-- 未找到定义：显示近似匹配建议 -->
     <div v-else class="wiki-hover-card__empty">
-      <span class="wiki-hover-card__empty-icon">⚠️</span>
-      <span>【{{ term }}】的定义未找到</span>
+      <div class="wiki-hover-card__empty-header">
+        <span class="wiki-hover-card__empty-icon">⚠️</span>
+        <span>【{{ lookupName }}】的定义未找到，请检查拼写或定义是否存在。</span>
+      </div>
+      <div v-if="resolved.suggestions.length > 0" class="wiki-hover-card__suggestions">
+        <hr class="wiki-hover-card__divider" />
+        <div class="wiki-hover-card__suggestions-title">下面是近似的定义：</div>
+        <ul class="wiki-hover-card__suggestions-list">
+          <li v-for="s in resolved.suggestions" :key="s.term">
+            <span class="wiki-hover-card__suggestion-term">【{{ s.term }}】</span>
+            <span class="wiki-hover-card__suggestion-source">：来自 {{ s.sources[0]?.filePath }}</span>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </template>
@@ -38,11 +66,13 @@
 import { computed, ref, onMounted, provide, defineComponent, h, nextTick } from 'vue'
 import { useHoverCards } from '@/composables/useHoverCards'
 import { useWikiStore } from '@/stores/wiki'
-import type { WikiTerm as WikiTermType } from '@shared/types'
+import { resolveTerm, filterByScope } from '@/utils/term-resolver'
+import type { WikiFormula as WikiFormulaType } from '@shared/types'
 
 import WikiTermComp from './WikiTerm.vue'
 import WikiDefinition from './WikiDefinition.vue'
-import WikiFormula from './WikiFormula.vue'
+import WikiFormulaComp from './WikiFormula.vue'
+import WikiFormulaValue from './WikiFormulaValue.vue'
 import { createMarkdownRenderer } from '@/markdown'
 
 const props = defineProps<{
@@ -57,15 +87,51 @@ const store = useWikiStore()
 const cardRef = ref<HTMLElement>()
 const cardSize = ref({ width: 320, height: 100 })
 
-// 向子组件提供当前卡片 ID，让嵌套的 WikiTerm 知道自己在哪个卡片内
+// 向子组件提供当前卡片 ID
 provide('hoverCardId', props.id)
 
-// ─── 查询词条定义 ─────────────────────────────────────────
+// ─── 解析 scope 前缀 ─────────────────────────────────────
 
-const definitions = computed<WikiTermType[]>(() => {
-  const terms = store.index.terms?.[props.term]
-  if (!terms || terms.length === 0) return []
-  return terms
+const explicitScope = computed<string | null>(() => {
+  const slashIndex = props.term.indexOf('/')
+  if (slashIndex > 0) return props.term.slice(0, slashIndex)
+  return null
+})
+
+const lookupName = computed(() => {
+  const slashIndex = props.term.indexOf('/')
+  if (slashIndex > 0) return props.term.slice(slashIndex + 1)
+  return props.term
+})
+
+// ─── 使用 term-resolver 解析词条 ──────────────────────────
+
+const resolved = computed(() => {
+  return resolveTerm(
+    props.term,
+    store.index,
+    store.currentScope,
+    store.currentFile,
+  )
+})
+
+/** 按 scope 过滤后的定义 */
+const filteredDefs = computed(() => {
+  if (!resolved.value.exact) return []
+  return filterByScope(
+    resolved.value.definitions,
+    explicitScope.value,
+    store.currentScope,
+    store.currentFile,
+  )
+})
+
+// ─── 查询关联公式 ─────────────────────────────────────────
+
+const relatedFormulas = computed<WikiFormulaType[]>(() => {
+  const formulas = store.index.formulas?.[lookupName.value]
+  if (!formulas || formulas.length === 0) return []
+  return formulas
 })
 
 // ─── 位置计算 ─────────────────────────────────────────────
@@ -118,7 +184,7 @@ const HoverCardContent = defineComponent({
   components: {
     'wiki-term': WikiTermComp,
     'wiki-definition': WikiDefinition,
-    'wiki-formula': WikiFormula,
+    'wiki-formula': WikiFormulaComp,
   },
   render() {
     if (!this.content) return h('div')
@@ -128,11 +194,45 @@ const HoverCardContent = defineComponent({
       components: {
         'wiki-term': WikiTermComp,
         'wiki-definition': WikiDefinition,
-        'wiki-formula': WikiFormula,
+        'wiki-formula': WikiFormulaComp,
       },
     })
   },
 })
+
+// ─── 卡片内公式渲染子组件 ─────────────────────────────────
+
+const FormulaContent = defineComponent({
+  props: {
+    formula: { type: String, default: '' },
+  },
+  components: {
+    'wiki-formula-value': WikiFormulaValue,
+  },
+  render() {
+    if (!this.formula) return h('div')
+    const escaped = escapeHtml(this.formula)
+    let html = escaped
+    html = html.replace(
+      /\[([^\]]+)\]/g,
+      '<wiki-formula-value name="$1" type="calc"></wiki-formula-value>'
+    )
+    html = html.replace(
+      /&lt;([^&]+)&gt;/g,
+      '<wiki-formula-value name="$1" type="design"></wiki-formula-value>'
+    )
+    return h({
+      template: `<span class="hover-card-formula">${html}</span>`,
+      components: {
+        'wiki-formula-value': WikiFormulaValue,
+      },
+    })
+  },
+})
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
 </script>
 
 <style scoped>
@@ -206,12 +306,56 @@ const HoverCardContent = defineComponent({
   margin: 8px 0;
 }
 
-.wiki-hover-card__empty {
-  color: #cf222e;
+.wiki-hover-card__formula-expr {
+  font-family: 'Consolas', 'Monaco', monospace;
   font-size: 13px;
+  background: #f0f4f8;
+  border-left: 3px solid #0969da;
+  padding: 6px 10px;
+  border-radius: 0 4px 4px 0;
+  margin: 4px 0;
+}
+
+.wiki-hover-card__empty {
+  font-size: 13px;
+}
+
+.wiki-hover-card__empty-header {
+  color: #cf222e;
 }
 
 .wiki-hover-card__empty-icon {
   margin-right: 4px;
+}
+
+.wiki-hover-card__suggestions {
+  margin-top: 4px;
+}
+
+.wiki-hover-card__suggestions-title {
+  font-size: 12px;
+  color: #8b949e;
+  margin-bottom: 4px;
+}
+
+.wiki-hover-card__suggestions-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.wiki-hover-card__suggestions-list li {
+  padding: 2px 0;
+  font-size: 13px;
+}
+
+.wiki-hover-card__suggestion-term {
+  color: #0969da;
+  font-weight: 500;
+}
+
+.wiki-hover-card__suggestion-source {
+  color: #8b949e;
+  font-size: 12px;
 }
 </style>

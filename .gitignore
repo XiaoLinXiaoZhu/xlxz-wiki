@@ -3,6 +3,9 @@ node_modules
 # 前端构建产物
 dist/
 
+# Bun 编译产物
+*.exe
+
 # Wiki 缓存
 .wiki-cache/
 

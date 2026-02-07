@@ -31,6 +31,27 @@
       "gitCommit": "d183d9e45dafb516c7c800f1490a98c4ee517b02",
       "ttlHours": 168,
       "schema": "{\"type\":\"object\",\"properties\":{\"files\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"summary\":{\"type\":\"string\"}}}"
+    },
+    {
+      "id": "2",
+      "query": "项目的 Markdown 解析器支持哪些语法？任务列表 checkbox 语法是如何处理的？",
+      "tags": [
+        "项目的",
+        "markdown",
+        "解析器支持哪些语法",
+        "任务列表",
+        "checkbox",
+        "语法是如何处理的"
+      ],
+      "scope": {
+        "directories": "e:/_Project/xlxz-wiki/src/markdown,e:/_Project/xlxz-wiki/server/indexer,e:/_Project/xlxz-wiki/server-go/indexer",
+        "filePatterns": "*.ts,*.go",
+        "excludes": null
+      },
+      "createdAt": "2026-02-07T16:46:47.758Z",
+      "gitCommit": "d50823aab07d936f444575d8966adcebbebad204",
+      "ttlHours": 168,
+      "schema": "{\"type\":\"object\",\"properties\":{\"markdownParser\":{\"type\":\"string\"},\"supportedSyntax\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"taskListSupport\":{\"type\":\"string\"}}}"
     }
   ]
 }

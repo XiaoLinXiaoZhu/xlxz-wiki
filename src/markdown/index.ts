@@ -3,6 +3,7 @@
  * 注册自定义语法规则，将 Wiki 语法转换为 Vue 组件标签
  */
 import MarkdownIt from 'markdown-it'
+import taskLists from 'markdown-it-task-lists'
 import { wikiTermRule } from './rules/wiki-term'
 import { wikiDefinitionRule } from './rules/wiki-definition'
 import { wikiFormulaRule } from './rules/wiki-formula'
@@ -46,6 +47,9 @@ export function createMarkdownRenderer(lineOffset: number = 0): MarkdownIt {
 
   // 注入行号属性（用于跳转定位）
   injectLineNumbers(md, lineOffset)
+
+  // 启用任务列表（checkbox）支持
+  md.use(taskLists, { enabled: true, label: true, labelAfter: true })
 
   // 注册自定义渲染规则（顺序重要：先定义后引用）
   wikiFormulaRule(md)

@@ -71,9 +71,13 @@ async function handleSave() {
 
   // 保存时需要保留 frontmatter
   const frontmatter = extractFrontmatter(store.currentContent)
+  // 反转义 Milkdown commonmark 序列化器添加的反斜杠
+  let cleanedContent = unescapeMarkdown(store.editingContent)
+  // 防止 Milkdown 输出中意外包含 frontmatter（避免重复拼接）
+  cleanedContent = stripFrontmatter(cleanedContent)
   const content = frontmatter
-    ? `${frontmatter}\n${store.editingContent}`
-    : store.editingContent
+    ? `${frontmatter}\n${cleanedContent}`
+    : cleanedContent
 
   try {
     const res = await fetch(`/api/file?path=${encodeURIComponent(store.currentFile)}`, {
@@ -92,6 +96,44 @@ async function handleSave() {
   } catch (err) {
     console.error('[DocView] 保存失败:', err)
   }
+}
+
+/**
+ * 反转义 Milkdown commonmark 序列化器添加的反斜杠
+ * 只处理 %% %% 内部和 【】 相关的转义，避免破坏用户有意的转义
+ */
+function unescapeMarkdown(text: string): string {
+  // 反转义 %% ... %% 内部的内容
+  let result = text.replace(/%%([^%]+?)%%/g, (_match, inner: string) => {
+    // 还原 \[ → [, \] → ], \* → *, \< → <, \> → >
+    const unescaped = inner
+      .replace(/\\\[/g, '[')
+      .replace(/\\\]/g, ']')
+      .replace(/\\\*/g, '*')
+      .replace(/\\</g, '<')
+      .replace(/\\>/g, '>')
+    return `%%${unescaped}%%`
+  })
+
+  // 反转义 【...】 内部的 \* 等
+  result = result.replace(/【([^】]+)】/g, (_match, inner: string) => {
+    const unescaped = inner
+      .replace(/\\\*/g, '*')
+      .replace(/\\\[/g, '[')
+      .replace(/\\\]/g, ']')
+    return `【${unescaped}】`
+  })
+
+  return result
+}
+
+/** 剥离 frontmatter，返回正文部分 */
+function stripFrontmatter(raw: string): string {
+  const trimmed = raw.trimStart()
+  if (!trimmed.startsWith('---')) return raw
+  const endIndex = trimmed.indexOf('---', 3)
+  if (endIndex === -1) return raw
+  return trimmed.slice(endIndex + 3).trimStart()
 }
 
 /** 提取 frontmatter 部分（包含 --- 分隔符） */

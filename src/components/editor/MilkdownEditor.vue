@@ -21,9 +21,6 @@ const emit = defineEmits<{
   save: []
 }>()
 
-/** 标记是否正在程序化设置内容（避免循环触发） */
-let settingContent = false
-
 useEditor((root) => {
   const editor = Editor.make()
     .config((ctx) => {
@@ -32,7 +29,7 @@ useEditor((root) => {
 
       // 监听 Markdown 内容变化
       ctx.get(listenerCtx).markdownUpdated((_ctx, markdown, prevMarkdown) => {
-        if (!settingContent && markdown !== prevMarkdown) {
+        if (markdown !== prevMarkdown) {
           emit('update:content', markdown)
         }
       })
@@ -42,7 +39,6 @@ useEditor((root) => {
     .use(listener)
     .use(clipboard)
 
-  // 注册 Wiki 自定义插件
   return useWikiPlugins(editor)
 })
 
@@ -103,32 +99,26 @@ function stripFrontmatter(raw: string): string {
 .milkdown .editor th, .milkdown .editor td { border: 1px solid #dfe2e5; padding: 6px 13px; }
 .milkdown .editor th { background: #f6f8fa; font-weight: 600; }
 
-/* 自定义节点样式 */
-.wiki-term-editor {
+/* Wiki 语法装饰样式（Decoration） */
+.wiki-term-highlight {
   color: #0366d6;
   background: #f1f8ff;
-  padding: 1px 4px;
+  padding: 1px 2px;
   border-radius: 3px;
-  cursor: default;
-  user-select: none;
 }
 
-.wiki-definition-editor {
+.wiki-definition-highlight {
   color: #6f42c1;
   background: #f5f0ff;
-  padding: 1px 4px;
+  padding: 1px 2px;
   border-radius: 3px;
-  cursor: default;
-  user-select: none;
 }
 
-.wiki-formula-editor {
+.wiki-formula-highlight {
   color: #e36209;
   background: #fff8f0;
-  padding: 1px 4px;
+  padding: 1px 2px;
   border-radius: 3px;
   font-family: 'Consolas', 'Monaco', monospace;
-  cursor: default;
-  user-select: none;
 }
 </style>

@@ -112,12 +112,30 @@
 
 ---
 
-## 阶段二：所见即所得编辑器（阶段一完成后）
+## 阶段二：所见即所得编辑器
 
-- [ ] Milkdown 集成 + 模式切换 UI
-- [ ] 自定义 Node（wiki_term, wiki_formula）
-- [ ] 输入【触发自动补全
-- [ ] 文件保存 + 外部修改检测
+### Week 4: Milkdown 集成
+
+- [x] **Day 1-2: Milkdown 编辑器基础搭建**
+  - [x] `@milkdown/kit@7.18.0` + `@milkdown/vue@7.18.0` 安装
+  - [x] `src/components/editor/MilkdownEditor.vue` — Milkdown 编辑器核心组件（commonmark + history + listener + clipboard）
+  - [x] `src/components/editor/MarkdownEditor.vue` — 编辑器容器（MilkdownProvider 包裹）
+  - [x] `src/views/DocView.vue` — 编辑/只读模式切换（v-if 切换 MarkdownViewer / MarkdownEditor）
+  - [x] `src/components/layout/Header.vue` — 编辑/保存/取消按钮
+  - [x] `src/stores/wiki.ts` — 新增 editingContent、saveRequestId、requestSave() 用于组件通信
+
+- [x] **Day 3: Wiki 语法实时高亮（Decoration 方案）**
+  - [x] `src/editor/wiki-nodes.ts` — ProseMirror Decoration 插件，实时扫描文本并高亮
+  - [x] `【词条】` → 蓝色高亮、`【词条】：定义` → 紫色高亮、`%% 公式 %%` → 橙色高亮
+  - [x] 文本完全可编辑，无 IME 输入问题（放弃 atom 节点方案，改用纯 Decoration）
+
+- [x] **Day 4: 文件保存 + Bug 修复**
+  - [x] POST `/api/file` 保存（Ctrl+S 快捷键 + Header 保存按钮）
+  - [x] 保存时自动保留 frontmatter + 反转义 Milkdown 添加的反斜杠（`\[` → `[`、`\*` → `*` 等）
+  - [x] 修复保存后顶部文本重复问题（stripFrontmatter 防护）
+
+- [ ] **待完成: 输入【触发自动补全**
+- [ ] **待完成: 编辑中文件被外部修改时提示**
 
 ## 阶段三：高级功能（远期）
 

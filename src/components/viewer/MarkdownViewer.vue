@@ -16,8 +16,6 @@ const props = defineProps<{
   content: string
 }>()
 
-const md = createMarkdownRenderer()
-
 /**
  * 手动剥离 frontmatter（避免在浏览器中使用 gray-matter，它依赖 Node.js Buffer）
  */
@@ -29,9 +27,23 @@ function stripFrontmatter(raw: string): string {
   return trimmed.slice(endIndex + 3).trimStart()
 }
 
-/** 去掉 frontmatter 后渲染 */
+/**
+ * 计算 frontmatter 占用的行数（包含两行 ---）
+ */
+function getFrontmatterLineCount(raw: string): number {
+  const trimmed = raw.trimStart()
+  if (!trimmed.startsWith('---')) return 0
+  const endIndex = trimmed.indexOf('---', 3)
+  if (endIndex === -1) return 0
+  const frontmatterBlock = trimmed.slice(0, endIndex + 3)
+  return frontmatterBlock.split('\n').length
+}
+
+/** 去掉 frontmatter 后渲染，并注入行号属性 */
 const renderedHtml = computed(() => {
   if (!props.content) return ''
+  const lineOffset = getFrontmatterLineCount(props.content)
+  const md = createMarkdownRenderer(lineOffset)
   const content = stripFrontmatter(props.content)
   return md.render(content)
 })

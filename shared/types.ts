@@ -12,6 +12,8 @@ export interface WikiTerm {
   filePath: string
   /** 定义类型 */
   definitionType: 'file' | 'inline'
+  /** 定义所在行号（原始文件中的行号，1-based） */
+  line?: number
 }
 
 /** 策划公式 */
@@ -26,6 +28,8 @@ export interface WikiFormula {
   scope: string
   /** 来源文件路径 */
   filePath: string
+  /** 公式所在行号（原始文件中的行号，1-based） */
+  line?: number
 }
 
 /** 全局索引 */

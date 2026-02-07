@@ -1,0 +1,33 @@
+# Auto-generated from .gitignore — adjust as needed.
+# This controls which files the AI cannot access.
+node_modules
+
+# 前端构建产物
+dist/
+
+# Bun 编译产物
+*.exe
+
+# Wiki 缓存
+.wiki-cache/
+
+# reference 目录（仅供参考，不参与构建）
+reference/
+
+# vuepress 缓存（参考项目残留）
+*/.vuepress/.cache/
+*/.vuepress/.temp/
+*/vuepress/.cache/
+*/vuepress/.temp/
+
+# 旧版数据目录
+data/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo

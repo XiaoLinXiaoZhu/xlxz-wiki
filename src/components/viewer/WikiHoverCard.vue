@@ -15,7 +15,7 @@
         class="wiki-hover-card__definition"
       >
         <div class="wiki-hover-card__source">
-          来自 {{ def.filePath }}
+          来自 <a class="wiki-hover-card__source-link" href="#" @click.prevent="navigateToSource(def.filePath, def.line)">{{ def.filePath }}<span v-if="def.line" class="wiki-hover-card__line">:{{ def.line }}</span></a>
           <span v-if="def.scope" class="wiki-hover-card__scope">（{{ def.scope }}）</span>
           <span v-if="def.definitionType === 'inline'" class="wiki-hover-card__inline">文件内定义</span>
         </div>
@@ -32,7 +32,7 @@
         class="wiki-hover-card__formula"
       >
         <div class="wiki-hover-card__source">
-          公式 · 来自 {{ formula.filePath }}
+          公式 · 来自 <a class="wiki-hover-card__source-link" href="#" @click.prevent="navigateToSource(formula.filePath, formula.line)">{{ formula.filePath }}<span v-if="formula.line" class="wiki-hover-card__line">:{{ formula.line }}</span></a>
           <span v-if="formula.scope" class="wiki-hover-card__scope">（{{ formula.scope }}）</span>
         </div>
         <div class="wiki-hover-card__formula-expr">
@@ -64,6 +64,7 @@
 
 <script setup lang="ts">
 import { computed, ref, onMounted, provide, defineComponent, h, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useHoverCards } from '@/composables/useHoverCards'
 import { useWikiStore } from '@/stores/wiki'
 import { resolveTerm, filterByScope } from '@/utils/term-resolver'
@@ -74,6 +75,8 @@ import WikiDefinition from './WikiDefinition.vue'
 import WikiFormulaComp from './WikiFormula.vue'
 import WikiFormulaValue from './WikiFormulaValue.vue'
 import { createMarkdownRenderer } from '@/markdown'
+
+const router = useRouter()
 
 const props = defineProps<{
   id: string
@@ -161,6 +164,16 @@ function onEnter() {
 
 function onLeave() {
   hoverCards.leaveCard(props.id)
+}
+
+/** 点击来源文件链接，跳转到对应文件并定位到行 */
+function navigateToSource(filePath: string, line?: number) {
+  // 关闭所有悬停卡片
+  hoverCards.closeAll()
+  // 构建路由路径（filePath 中的 / 不需要编码，各段分别编码）
+  const encodedPath = filePath.split('/').map(encodeURIComponent).join('/')
+  const hash = line ? `#L${line}` : ''
+  router.push(`/doc/${encodedPath}${hash}`)
 }
 
 // ─── 挂载后更新尺寸 ───────────────────────────────────────
@@ -262,6 +275,23 @@ function escapeHtml(str: string): string {
   font-size: 12px;
   color: #8b949e;
   margin-bottom: 4px;
+}
+
+.wiki-hover-card__source-link {
+  color: #0969da;
+  text-decoration: none;
+  cursor: pointer;
+  border-bottom: 1px dashed #0969da;
+}
+
+.wiki-hover-card__source-link:hover {
+  color: #0550ae;
+  border-bottom-style: solid;
+}
+
+.wiki-hover-card__line {
+  color: #8b949e;
+  font-size: 11px;
 }
 
 .wiki-hover-card__scope {

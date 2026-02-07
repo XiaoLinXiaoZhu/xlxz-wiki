@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch } from 'vue'
+import { watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWikiStore } from '@/stores/wiki'
 import MarkdownViewer from '@/components/viewer/MarkdownViewer.vue'
@@ -34,16 +34,63 @@ const store = useWikiStore()
 
 watch(
   () => route.params.path,
-  (path) => {
+  async (path) => {
     if (path) {
       const filePath = Array.isArray(path) ? path.join('/') : path
       // 切换文件时退出编辑模式
       store.mode = 'readonly'
-      store.loadFile(filePath)
+      await store.loadFile(filePath)
+      // 文件加载完成后，处理行号 hash 跳转
+      await nextTick()
+      scrollToLine()
     }
   },
   { immediate: true },
 )
+
+// 监听 hash 变化（同一文件内跳转到不同行）
+watch(
+  () => route.hash,
+  async () => {
+    await nextTick()
+    scrollToLine()
+  },
+)
+
+/**
+ * 根据 URL hash（#L行号）滚动到对应行
+ * 查找 data-line 属性最接近且 ≤ 目标行号的元素
+ */
+function scrollToLine() {
+  const hash = route.hash
+  if (!hash) return
+  const match = hash.match(/^#L(\d+)$/)
+  if (!match) return
+  const targetLine = parseInt(match[1], 10)
+  if (isNaN(targetLine)) return
+
+  // 查找所有带 data-line 的元素
+  const elements = document.querySelectorAll<HTMLElement>('[data-line]')
+  if (elements.length === 0) return
+
+  // 找到 data-line ≤ targetLine 且最接近的元素
+  let bestEl: HTMLElement | null = null
+  let bestLine = -1
+  for (const el of elements) {
+    const line = parseInt(el.getAttribute('data-line') || '0', 10)
+    if (line <= targetLine && line > bestLine) {
+      bestLine = line
+      bestEl = el
+    }
+  }
+
+  if (bestEl) {
+    bestEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // 短暂高亮效果
+    bestEl.classList.add('line-highlight')
+    setTimeout(() => bestEl!.classList.remove('line-highlight'), 2000)
+  }
+}
 
 // 进入编辑模式时，复制当前内容
 watch(
@@ -165,5 +212,12 @@ function extractFrontmatter(raw: string): string {
 .doc-view__empty h2 {
   font-weight: 600;
   color: #24292e;
+}
+
+/* 行号跳转高亮效果 */
+:deep(.line-highlight) {
+  background-color: #fff8c5;
+  border-radius: 4px;
+  transition: background-color 2s ease;
 }
 </style>

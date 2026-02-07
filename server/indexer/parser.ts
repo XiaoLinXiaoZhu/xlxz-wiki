@@ -28,11 +28,27 @@ export function parseFile(content: string, filePath: string): ParseResult {
   const scope: string = (frontmatter as Record<string, unknown>).scope as string || ''
   const aliases: string[] = (frontmatter as Record<string, unknown>).alias as string[] || []
 
-  const terms = parseAliasTerms(markdownContent, filePath, scope, aliases)
-  const inlineTerms = parseInlineTerms(markdownContent, filePath, scope)
-  const formulas = parseFormulas(markdownContent, filePath, scope)
+  // 计算 frontmatter 占用的行数（用于将正文行号映射回原始文件行号）
+  const frontmatterLineCount = getFrontmatterLineCount(content)
+
+  const terms = parseAliasTerms(markdownContent, filePath, scope, aliases, frontmatterLineCount)
+  const inlineTerms = parseInlineTerms(markdownContent, filePath, scope, frontmatterLineCount)
+  const formulas = parseFormulas(markdownContent, filePath, scope, frontmatterLineCount)
 
   return { terms, inlineTerms, formulas, scope }
+}
+
+/**
+ * 计算 frontmatter 占用的行数（包含两行 ---）
+ * 如果没有 frontmatter 则返回 0
+ */
+function getFrontmatterLineCount(content: string): number {
+  const trimmed = content.trimStart()
+  if (!trimmed.startsWith('---')) return 0
+  const endIndex = trimmed.indexOf('---', 3)
+  if (endIndex === -1) return 0
+  const frontmatterBlock = trimmed.slice(0, endIndex + 3)
+  return frontmatterBlock.split('\n').length
 }
 
 /**
@@ -44,16 +60,28 @@ function parseAliasTerms(
   filePath: string,
   scope: string,
   aliases: string[],
+  frontmatterLineCount: number,
 ): WikiTerm[] {
   if (aliases.length === 0) return []
 
   const lines = content.split('\n')
-  const contentLines = lines.filter(line =>
-    !line.startsWith('#') &&
-    !line.startsWith('---') &&
-    line.trim().length > 0 &&
-    !line.match(/【[^】]+】：/)
-  )
+  // 找到第一行有效内容的行号（用于定位）
+  let firstContentLine = -1
+  const contentLines: string[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (
+      !line.startsWith('#') &&
+      !line.startsWith('---') &&
+      line.trim().length > 0 &&
+      !line.match(/【[^】]+】：/)
+    ) {
+      contentLines.push(line)
+      if (firstContentLine === -1) {
+        firstContentLine = i
+      }
+    }
+  }
   const definition = contentLines.join('\n').trim()
   if (!definition) return []
 
@@ -64,6 +92,7 @@ function parseAliasTerms(
     scope,
     filePath,
     definitionType: 'file',
+    line: firstContentLine >= 0 ? frontmatterLineCount + firstContentLine + 1 : undefined,
   }
 
   return [term]
@@ -77,13 +106,15 @@ function parseInlineTerms(
   content: string,
   filePath: string,
   scope: string,
+  frontmatterLineCount: number,
 ): WikiTerm[] {
   const terms: WikiTerm[] = []
   const lines = content.split('\n')
   let inFence = false
   let fenceMarker = ''
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
     // 处理围栏代码块
     if (toggleFence(line.trim(), { inFence, fenceMarker })) {
       inFence = !inFence
@@ -108,6 +139,7 @@ function parseInlineTerms(
         scope,
         filePath,
         definitionType: 'inline',
+        line: frontmatterLineCount + i + 1,
       })
     }
   }
@@ -123,13 +155,15 @@ function parseFormulas(
   content: string,
   filePath: string,
   scope: string,
+  frontmatterLineCount: number,
 ): WikiFormula[] {
   const formulas: WikiFormula[] = []
   const lines = content.split('\n')
   let inFence = false
   let fenceMarker = ''
 
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
     if (toggleFence(line.trim(), { inFence, fenceMarker })) {
       inFence = !inFence
       if (inFence) {
@@ -153,6 +187,7 @@ function parseFormulas(
         designValues: extractDesignValues(expression),
         scope,
         filePath,
+        line: frontmatterLineCount + i + 1,
       })
     }
   }

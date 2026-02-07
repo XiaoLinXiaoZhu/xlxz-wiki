@@ -6,7 +6,7 @@
       <p>请从左侧文件树中选择一个文档查看。</p>
     </div>
     <div v-else class="doc-view__content">
-      <pre class="doc-view__raw">{{ store.currentContent }}</pre>
+      <MarkdownViewer :content="store.currentContent" />
     </div>
   </div>
 </template>
@@ -15,11 +15,11 @@
 import { watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWikiStore } from '@/stores/wiki'
+import MarkdownViewer from '@/components/viewer/MarkdownViewer.vue'
 
 const route = useRoute()
 const store = useWikiStore()
 
-// 监听路由变化，加载对应文件
 watch(
   () => route.params.path,
   (path) => {
@@ -48,15 +48,6 @@ watch(
 
 .doc-view__empty h2 {
   font-weight: 600;
-  color: #24292e;
-}
-
-.doc-view__raw {
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
   color: #24292e;
 }
 </style>

@@ -7,7 +7,6 @@
 <script setup lang="ts">
 import { computed, defineComponent, h } from 'vue'
 import { createMarkdownRenderer } from '@/markdown'
-import matter from 'gray-matter'
 import WikiTerm from './WikiTerm.vue'
 import WikiDefinition from './WikiDefinition.vue'
 import WikiFormula from './WikiFormula.vue'
@@ -18,10 +17,21 @@ const props = defineProps<{
 
 const md = createMarkdownRenderer()
 
+/**
+ * 手动剥离 frontmatter（避免在浏览器中使用 gray-matter，它依赖 Node.js Buffer）
+ */
+function stripFrontmatter(raw: string): string {
+  const trimmed = raw.trimStart()
+  if (!trimmed.startsWith('---')) return raw
+  const endIndex = trimmed.indexOf('---', 3)
+  if (endIndex === -1) return raw
+  return trimmed.slice(endIndex + 3).trimStart()
+}
+
 /** 去掉 frontmatter 后渲染 */
 const renderedHtml = computed(() => {
   if (!props.content) return ''
-  const { content } = matter(props.content)
+  const content = stripFrontmatter(props.content)
   return md.render(content)
 })
 

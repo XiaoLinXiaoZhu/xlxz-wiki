@@ -1,9 +1,11 @@
 <template>
   <MainLayout />
+  <HoverCardLayer />
 </template>
 
 <script setup lang="ts">
 import MainLayout from './components/layout/MainLayout.vue'
+import HoverCardLayer from './components/viewer/HoverCardLayer.vue'
 </script>
 
 <style>

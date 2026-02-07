@@ -1,5 +1,6 @@
 <template>
   <span
+    ref="termRef"
     class="wiki-term"
     :class="{ 'wiki-term--missing': !hasDef }"
     @mouseenter="onEnter"
@@ -8,25 +9,37 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, inject } from 'vue'
 import { useWikiStore } from '@/stores/wiki'
+import { useHoverCards } from '@/composables/useHoverCards'
 
 const props = defineProps<{
   term: string
 }>()
 
 const store = useWikiStore()
+const hoverCards = useHoverCards()
+const termRef = ref<HTMLElement>()
+
+// 从父级 HoverCard 注入的 cardId（如果在卡片内则非 null）
+const parentCardId = inject<string | null>('hoverCardId', null)
+
+let currentCardId: string | null = null
 
 const hasDef = computed(() => {
   return !!(store.index.terms && store.index.terms[props.term])
 })
 
 function onEnter() {
-  // TODO: Week 2 Day 3 — WikiHoverCard 悬停卡片
+  if (!termRef.value) return
+  currentCardId = hoverCards.openCard(props.term, termRef.value, parentCardId)
 }
 
 function onLeave() {
-  // TODO: Week 2 Day 3 — WikiHoverCard 悬停卡片
+  if (currentCardId) {
+    hoverCards.requestClose(currentCardId)
+    currentCardId = null
+  }
 }
 </script>
 

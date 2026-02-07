@@ -21,22 +21,22 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3
       hono:
-        specifier: ^4.7.6
+        specifier: ^4.11.8
         version: 4.11.8
       markdown-it:
         specifier: ^14.1.0
         version: 14.1.0
       pinia:
-        specifier: ^3.0.2
+        specifier: ^3.0.4
         version: 3.0.4(typescript@5.9.3)(vue@3.5.27(typescript@5.9.3))
       pinyin-pro:
         specifier: ^3.28.0
         version: 3.28.0
       vue:
-        specifier: ^3.5.18
+        specifier: ^3.5.27
         version: 3.5.27(typescript@5.9.3)
       vue-router:
-        specifier: ^4.5.1
+        specifier: ^4.6.4
         version: 4.6.4(vue@3.5.27(typescript@5.9.3))
     devDependencies:
       '@types/bun':
@@ -46,16 +46,16 @@ importers:
         specifier: ^14.1.2
         version: 14.1.2
       '@types/node':
-        specifier: ^24.2.0
+        specifier: ^24.10.11
         version: 24.10.11
       '@vitejs/plugin-vue':
         specifier: ^5.2.4
         version: 5.2.4(vite@6.4.1(@types/node@24.10.11))(vue@3.5.27(typescript@5.9.3))
       typescript:
-        specifier: ^5.9.2
+        specifier: ^5.9.3
         version: 5.9.3
       vite:
-        specifier: ^6.3.5
+        specifier: ^6.4.1
         version: 6.4.1(@types/node@24.10.11)
 
 packages:

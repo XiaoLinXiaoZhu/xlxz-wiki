@@ -53,11 +53,19 @@ pnpm server:start
 ### 打包为可执行程序
 
 ```bash
-# 一键构建前端 + 编译服务器
+# 一键构建前端 + 内嵌资源 + 编译服务器
 pnpm release
 ```
 
-生成 `xlxz-wiki.exe`，与 `dist/` 和 `wiki-docs/` 放在同一目录下即可运行。
+生成 `xlxz-wiki.exe`（前端资源已内嵌），只需与 `wiki-docs/` 放在同一目录下即可运行：
+
+```
+发布包/
+├── xlxz-wiki.exe      # 可执行程序（含内嵌前端）
+└── wiki-docs/         # 文档目录
+```
+
+双击运行后，浏览器会自动打开 `http://127.0.0.1:3055`。
 
 ## 文档语法
 

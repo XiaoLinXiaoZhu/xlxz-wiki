@@ -6,6 +6,7 @@ import MarkdownIt from 'markdown-it'
 import { wikiTermRule } from './rules/wiki-term'
 import { wikiDefinitionRule } from './rules/wiki-definition'
 import { wikiFormulaRule } from './rules/wiki-formula'
+import { mermaidRule } from './rules/mermaid'
 
 /**
  * 给块级元素注入 data-line 属性的插件
@@ -50,6 +51,7 @@ export function createMarkdownRenderer(lineOffset: number = 0): MarkdownIt {
   wikiFormulaRule(md)
   wikiDefinitionRule(md)
   wikiTermRule(md)
+  mermaidRule(md)
 
   return md
 }

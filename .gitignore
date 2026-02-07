@@ -5,6 +5,7 @@ dist/
 
 # Bun 编译产物
 *.exe
+*.exe~
 
 # Wiki 缓存
 .wiki-cache/

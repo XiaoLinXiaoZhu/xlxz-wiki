@@ -11,6 +11,7 @@ import WikiTerm from './WikiTerm.vue'
 import WikiDefinition from './WikiDefinition.vue'
 import WikiFormula from './WikiFormula.vue'
 import WikiFormulaValue from './WikiFormulaValue.vue'
+import MermaidDiagram from './MermaidDiagram.vue'
 
 const props = defineProps<{
   content: string
@@ -61,6 +62,7 @@ const DynamicContent = defineComponent({
     'wiki-definition': WikiDefinition,
     'wiki-formula': WikiFormula,
     'wiki-formula-value': WikiFormulaValue,
+    'mermaid-diagram': MermaidDiagram,
   },
   render() {
     if (!this.html) return h('div')
@@ -72,6 +74,7 @@ const DynamicContent = defineComponent({
         'wiki-definition': WikiDefinition,
         'wiki-formula': WikiFormula,
         'wiki-formula-value': WikiFormulaValue,
+        'mermaid-diagram': MermaidDiagram,
       },
     })
   },

@@ -1,7 +1,7 @@
 {
   "name": "xlxz-wiki",
   "private": true,
-  "version": "4.0.0",
+  "version": "4.1.0",
   "description": "游戏策划案专用 Wiki 文档系统 — Markdown 词条引用 + 悬停定义卡片",
   "type": "module",
   "scripts": {
@@ -23,6 +23,7 @@
     "gray-matter": "^4.0.3",
     "hono": "^4.11.8",
     "markdown-it": "^14.1.0",
+    "mermaid": "^11.12.2",
     "pinia": "^3.0.4",
     "pinyin-pro": "^3.28.0",
     "vue": "^3.5.27",

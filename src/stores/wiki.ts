@@ -25,8 +25,14 @@ export const useWikiStore = defineStore('wiki', () => {
   /** 当前作用域 */
   const currentScope = ref('')
 
-  /** 模式：只读 / 编辑（阶段二） */
+  /** 模式：只读 / 编辑 */
   const mode = ref<'readonly' | 'edit'>('readonly')
+
+  /** 编辑中的内容（与 currentContent 分离，避免实时同步到只读视图） */
+  const editingContent = ref('')
+
+  /** 保存请求计数器（Header 触发 → DocView watch saveRequestId 响应） */
+  const saveRequestId = ref(0)
 
   /** 加载状态 */
   const loading = ref(false)
@@ -103,6 +109,11 @@ export const useWikiStore = defineStore('wiki', () => {
     index.value = newIndex
   }
 
+  /** 请求保存（Header 按钮触发，DocView watch saveRequestId 响应） */
+  function requestSave() {
+    saveRequestId.value++
+  }
+
   return {
     // 状态
     index,
@@ -111,6 +122,8 @@ export const useWikiStore = defineStore('wiki', () => {
     currentContent,
     currentScope,
     mode,
+    editingContent,
+    saveRequestId,
     loading,
     // 计算属性
     currentFileName,
@@ -119,5 +132,6 @@ export const useWikiStore = defineStore('wiki', () => {
     fetchFileTree,
     loadFile,
     updateIndex,
+    requestSave,
   }
 })

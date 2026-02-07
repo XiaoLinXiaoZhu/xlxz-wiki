@@ -16,6 +16,8 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@milkdown/kit": "^7.18.0",
+    "@milkdown/vue": "^7.18.0",
     "chokidar": "^4.0.3",
     "gray-matter": "^4.0.3",
     "hono": "^4.7.6",

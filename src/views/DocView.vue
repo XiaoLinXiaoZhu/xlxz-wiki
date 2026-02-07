@@ -148,7 +148,9 @@ function extractFrontmatter(raw: string): string {
 
 <style scoped>
 .doc-view {
-  max-width: 800px;
+  max-width: 820px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .doc-view__loading {

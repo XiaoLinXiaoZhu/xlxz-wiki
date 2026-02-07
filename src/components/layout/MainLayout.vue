@@ -44,6 +44,9 @@ import Header from './Header.vue'
 .main-layout__main {
   flex: 1;
   overflow-y: auto;
-  padding: 24px 32px;
+  padding: 32px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 </style>

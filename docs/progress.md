@@ -134,7 +134,12 @@
   - [x] 保存时自动保留 frontmatter + 反转义 Milkdown 添加的反斜杠（`\[` → `[`、`\*` → `*` 等）
   - [x] 修复保存后顶部文本重复问题（stripFrontmatter 防护）
 
-- [ ] **待完成: 输入【触发自动补全**
+- [x] **Day 5: 输入【触发自动补全**
+  - [x] `src/editor/wiki-autocomplete.ts` — ProseMirror 插件，Transaction 监听检测未闭合的【触发补全（IME 兼容）
+  - [x] `src/components/editor/AutocompletePopup.vue` — 补全弹窗组件（Teleport to body，键盘导航 ↑↓/Enter/Escape，点击选择）
+  - [x] `src/components/editor/MilkdownEditor.vue` — 集成自动补全插件 + 弹窗，选中后通过 `editorViewCtx` 插入 `【词条】`
+  - [x] MutationObserver 等待 ProseMirror DOM 就绪，确保编辑器异步初始化后正确绑定事件
+
 - [ ] **待完成: 编辑中文件被外部修改时提示**
 
 ## 阶段三：高级功能（远期）

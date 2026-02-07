@@ -1,16 +1,24 @@
 <template>
-  <Milkdown />
+  <div ref="containerRef">
+    <Milkdown />
+    <AutocompletePopup
+      :editor-dom="editorDom"
+      @select="handleAutocompleteSelect"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { Milkdown, useEditor } from '@milkdown/vue'
-import { Editor, rootCtx, defaultValueCtx } from '@milkdown/kit/core'
+import { Editor, rootCtx, defaultValueCtx, editorViewCtx } from '@milkdown/kit/core'
 import { commonmark } from '@milkdown/kit/preset/commonmark'
 import { history } from '@milkdown/kit/plugin/history'
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { clipboard } from '@milkdown/kit/plugin/clipboard'
 import { useWikiPlugins } from '@/editor/wiki-nodes'
+import { wikiAutocompletePlugin } from '@/editor/wiki-autocomplete'
+import AutocompletePopup from './AutocompletePopup.vue'
 
 const props = defineProps<{
   content: string
@@ -21,7 +29,10 @@ const emit = defineEmits<{
   save: []
 }>()
 
-useEditor((root) => {
+const containerRef = ref<HTMLElement | null>(null)
+const editorDom = ref<HTMLElement | null>(null)
+
+const { get } = useEditor((root) => {
   const editor = Editor.make()
     .config((ctx) => {
       ctx.set(rootCtx, root)
@@ -39,8 +50,57 @@ useEditor((root) => {
     .use(listener)
     .use(clipboard)
 
-  return useWikiPlugins(editor)
+  // 注册 wiki 装饰插件 + 自动补全插件
+  return useWikiPlugins(editor).use(wikiAutocompletePlugin)
 })
+
+// 等编辑器渲染后获取 ProseMirror DOM
+onMounted(() => {
+  // Milkdown 异步初始化，用 MutationObserver 等待 .ProseMirror 出现
+  const container = containerRef.value
+  if (!container) return
+
+  const tryFind = () => container.querySelector('.ProseMirror') as HTMLElement | null
+
+  // 先尝试直接查找
+  const found = tryFind()
+  if (found) {
+    editorDom.value = found
+    return
+  }
+
+  // 未找到则观察 DOM 变化
+  const observer = new MutationObserver(() => {
+    const el = tryFind()
+    if (el) {
+      editorDom.value = el
+      observer.disconnect()
+    }
+  })
+  observer.observe(container, { childList: true, subtree: true })
+})
+
+/**
+ * 处理自动补全选择：替换 【...光标 为 【词条】
+ */
+function handleAutocompleteSelect(term: string, triggerPos: number) {
+  const editor = get()
+  if (!editor) return
+  editor.action((ctx) => {
+    const view = ctx.get(editorViewCtx)
+    const { state } = view
+
+    // 替换从 triggerPos（【的位置）到当前光标的内容
+    const tr = state.tr.replaceWith(
+      triggerPos,
+      state.selection.from,
+      state.schema.text(`【${term}】`),
+    )
+
+    view.dispatch(tr)
+    view.focus()
+  })
+}
 
 // Ctrl+S 保存
 function handleKeydown(e: KeyboardEvent) {

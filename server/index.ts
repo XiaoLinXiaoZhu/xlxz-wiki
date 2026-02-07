@@ -28,7 +28,28 @@ const ROOT_DIR = IS_EMBEDDED
 
 const WIKI_DOCS_DIR = resolve(ROOT_DIR, 'wiki-docs')
 const DIST_DIR = resolve(ROOT_DIR, 'dist')
-const PORT = Number(process.env.PORT || 3055)
+const DEFAULT_PORT = Number(process.env.PORT || 3055)
+
+// ─── 端口检测 ───────────────────────────────────────────────
+
+async function findAvailablePort(startPort: number, maxAttempts = 10): Promise<number> {
+  for (let i = 0; i < maxAttempts; i++) {
+    const port = startPort + i
+    try {
+      const server = Bun.serve({ port, fetch: () => new Response() })
+      server.stop()
+      return port
+    } catch {
+      // 端口被占用，尝试下一个
+    }
+  }
+  throw new Error(`无法找到可用端口 (尝试了 ${startPort}-${startPort + maxAttempts - 1})`)
+}
+
+const PORT = await findAvailablePort(DEFAULT_PORT)
+if (PORT !== DEFAULT_PORT) {
+  console.log(`[端口] ${DEFAULT_PORT} 已被占用，使用 ${PORT}`)
+}
 
 // 打印内嵌资源信息
 if (IS_EMBEDDED) {

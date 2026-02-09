@@ -54,6 +54,7 @@ function getFrontmatterLineCount(content: string): number {
 /**
  * 从 frontmatter alias 解析文件级词条
  * 使用全文（去除标题/空行/内联定义行）作为定义内容
+ * 支持 <!-- more --> 标记截断摘要
  */
 function parseAliasTerms(
   content: string,
@@ -68,8 +69,17 @@ function parseAliasTerms(
   // 找到第一行有效内容的行号（用于定位）
   let firstContentLine = -1
   const contentLines: string[] = []
+  let hasMore = false
+  
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
+    
+    // 检查 <!-- more --> 标记（支持多种格式）
+    if (line.trim().match(/^<!--\s*more\s*-->$/i)) {
+      hasMore = true
+      break
+    }
+    
     if (
       !line.startsWith('#') &&
       !line.startsWith('---') &&
@@ -93,6 +103,7 @@ function parseAliasTerms(
     filePath,
     definitionType: 'file',
     line: firstContentLine >= 0 ? frontmatterLineCount + firstContentLine + 1 : undefined,
+    hasMore,
   }
 
   return [term]

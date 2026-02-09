@@ -22,6 +22,10 @@
         <div class="wiki-hover-card__content">
           <HoverCardContent :content="def.definition" />
         </div>
+        <div v-if="def.hasMore" class="wiki-hover-card__more">
+          <span class="wiki-hover-card__more-icon">📄</span>
+          <a class="wiki-hover-card__more-link" href="#" @click.prevent="navigateToSource(def.filePath, def.line)">查看完整内容…</a>
+        </div>
         <hr v-if="i < filteredDefs.length - 1 || relatedFormulas.length > 0" class="wiki-hover-card__divider" />
       </div>
 
@@ -305,6 +309,29 @@ function escapeHtml(str: string): string {
   border-radius: 3px;
   font-size: 11px;
   margin-left: 4px;
+}
+
+.wiki-hover-card__more {
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: #f6f8fa;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #57606a;
+}
+
+.wiki-hover-card__more-icon {
+  margin-right: 4px;
+}
+
+.wiki-hover-card__more-link {
+  color: #0969da;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.wiki-hover-card__more-link:hover {
+  text-decoration: underline;
 }
 
 .wiki-hover-card__content {

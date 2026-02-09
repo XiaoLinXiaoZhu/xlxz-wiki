@@ -16,6 +16,7 @@ type WikiTerm struct {
 	Scope          string   `json:"scope"`
 	FilePath       string   `json:"filePath"`
 	DefinitionType string   `json:"definitionType"`
+	HasMore        bool     `json:"hasMore,omitempty"`
 }
 
 // WikiFormula 策划公式

@@ -52,6 +52,18 @@
       "gitCommit": "d50823aab07d936f444575d8966adcebbebad204",
       "ttlHours": 168,
       "schema": "{\"type\":\"object\",\"properties\":{\"markdownParser\":{\"type\":\"string\"},\"supportedSyntax\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"taskListSupport\":{\"type\":\"string\"}}}"
+    },
+    {
+      "id": "3",
+      "query": "文件定义模式的悬浮卡片内容显示逻辑在哪里实现？",
+      "tags": [
+        "文件定义模式的悬浮卡片内容显示逻辑在哪里实现"
+      ],
+      "scope": null,
+      "createdAt": "2026-02-07T17:26:13.117Z",
+      "gitCommit": "fd69457d3226a73a868d66b5a782636c96042e20",
+      "ttlHours": 168,
+      "schema": "{\"type\":\"object\",\"properties\":{\"files\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"summary\":{\"type\":\"string\"}}}"
     }
   ]
 }

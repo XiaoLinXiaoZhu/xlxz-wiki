@@ -14,6 +14,8 @@ export interface WikiTerm {
   definitionType: 'file' | 'inline'
   /** 定义所在行号（原始文件中的行号，1-based） */
   line?: number
+  /** 是否有更多内容（文件定义模式下，存在 <!-- more --> 标记时为 true） */
+  hasMore?: boolean
 }
 
 /** 策划公式 */

@@ -56,8 +56,8 @@ func ParseFile(fullPath, relPath string) ([]*WikiTerm, []*WikiFormula, string) {
 			}
 		}
 
-		// 提取定义（第一段非空内容）
-		definition := extractDefinition(text)
+		// 提取定义（支持 <!-- more --> 截断）
+		definition, hasMore := extractDefinition(text)
 
 		if definition != "" {
 			terms = append(terms, &WikiTerm{
@@ -67,6 +67,7 @@ func ParseFile(fullPath, relPath string) ([]*WikiTerm, []*WikiFormula, string) {
 				Scope:          scope,
 				FilePath:       relPath,
 				DefinitionType: "file",
+				HasMore:        hasMore,
 			})
 		}
 	}
@@ -134,20 +135,37 @@ func parseFrontmatter(text string) map[string]string {
 	return fm
 }
 
-func extractDefinition(text string) string {
+// moreTagRe 匹配 <!-- more --> 标记
+var moreTagRe = regexp.MustCompile(`(?i)^\s*<!--\s*more\s*-->\s*$`)
+
+// extractDefinition 提取定义内容，支持 <!-- more --> 截断
+// 返回定义内容和是否有更多内容
+func extractDefinition(text string) (string, bool) {
 	// 移除 frontmatter
 	text = frontmatterRe.ReplaceAllString(text, "")
 	
-	// 按段落分割
-	paragraphs := strings.Split(text, "\n\n")
-	for _, p := range paragraphs {
-		p = strings.TrimSpace(p)
-		// 跳过标题和空行
-		if p == "" || strings.HasPrefix(p, "#") {
+	lines := strings.Split(text, "\n")
+	var contentLines []string
+	hasMore := false
+	
+	for _, line := range lines {
+		// 检查 <!-- more --> 标记
+		if moreTagRe.MatchString(line) {
+			hasMore = true
+			break
+		}
+		
+		trimmed := strings.TrimSpace(line)
+		// 跳过标题、分隔线、空行和内联定义
+		if trimmed == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(trimmed, "---") {
 			continue
 		}
-		// 返回第一个有效段落
-		return p
+		if inlineDefRe.MatchString(line) {
+			continue
+		}
+		
+		contentLines = append(contentLines, line)
 	}
-	return ""
+	
+	return strings.TrimSpace(strings.Join(contentLines, "\n")), hasMore
 }

@@ -18,7 +18,7 @@
       "@/*": ["./src/*"],
       "@shared/*": ["./shared/*"]
     },
-    "types": ["bun", "vite/client"]
+    "types": ["vite/client"]
   },
   "include": [
     "src/**/*.ts",

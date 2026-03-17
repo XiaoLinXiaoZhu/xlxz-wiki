@@ -5,8 +5,8 @@ node_modules
 # 前端构建产物
 dist/
 
-# Go 编译产物
-*.exe
+# Go 编译产物（输出到根目录）
+xlxz-wiki.exe
 
 # Go 构建临时目录
 server-go/dist/

@@ -18,7 +18,7 @@
 
 ### 环境要求
 
-- [Go](https://go.dev/) >= 1.22（后端）
+- [Go](https://go.dev/) >= 1.25（后端）
 - [Node.js](https://nodejs.org/) >= 18（前端构建）
 - [pnpm](https://pnpm.io/)
 
@@ -47,7 +47,7 @@ cd server-go && go run .
 pnpm release
 ```
 
-生成 `server-go/xlxz-wiki.exe`，只需与 `wiki-docs/` 放在同一目录下即可运行：
+生成 `xlxz-wiki.exe`，只需与 `wiki-docs/` 放在同一目录下即可运行：
 
 ```
 发布包/
@@ -129,7 +129,7 @@ xlxz-wiki/
 ## 测试
 
 ```bash
-bun test
+pnpm test
 ```
 
 ## 技术栈

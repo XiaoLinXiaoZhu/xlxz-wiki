@@ -23,4 +23,7 @@ Thumbs.db
 # IDE
 .idea/
 *.swp
-*.swo  
+*.swo
+
+# AI 工具缓存
+.roo/cache/  

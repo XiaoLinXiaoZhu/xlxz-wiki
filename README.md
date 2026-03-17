@@ -18,8 +18,8 @@
 
 ### 环境要求
 
-- [Bun](https://bun.sh/) >= 1.0
-- [Node.js](https://nodejs.org/) >= 18（用于 Vite 构建）
+- [Go](https://go.dev/) >= 1.22（后端）
+- [Node.js](https://nodejs.org/) >= 18（前端构建）
 - [pnpm](https://pnpm.io/)
 
 ### 安装
@@ -34,30 +34,20 @@ pnpm install
 # 终端 1：启动前端开发服务器
 pnpm dev
 
-# 终端 2：启动后端服务器（带热重载）
-pnpm server:dev
+# 终端 2：启动 Go 后端服务器
+cd server-go && go run .
 ```
 
 前端访问 `http://localhost:5173`，API 请求自动代理到后端 `http://localhost:3055`。
 
-### 生产模式
-
-```bash
-# 构建前端 + 启动服务器
-pnpm build
-pnpm server:start
-```
-
-访问 `http://127.0.0.1:3055`。
-
 ### 打包为可执行程序
 
 ```bash
-# 一键构建前端 + 内嵌资源 + 编译服务器
+# 一键构建前端 + 编译 Go 服务器（前端资源内嵌）
 pnpm release
 ```
 
-生成 `xlxz-wiki.exe`（前端资源已内嵌），只需与 `wiki-docs/` 放在同一目录下即可运行：
+生成 `server-go/xlxz-wiki.exe`，只需与 `wiki-docs/` 放在同一目录下即可运行：
 
 ```
 发布包/
@@ -106,7 +96,7 @@ scope: 角色系统        # 可选，区域定义
 使用 `%% 表达式 %%` 定义策划公式：
 
 ```md
-%% [伤害] = <暴击率> * (<暴击伤害> + 1) * <攻击力> %%
+%% [伤害] = <攻击力> * <冲击系数> %%
 ```
 
 - `[xxx]` — 计算值（蓝色加粗）
@@ -128,12 +118,12 @@ scope: game1
 
 ```
 xlxz-wiki/
-├── server/          # 后端（Hono + Bun）
+├── server-go/       # 后端（Go，SSOT）
 ├── src/             # 前端（Vue 3 + Vite）
-├── shared/          # 前后端共享类型
+├── shared/          # 前端共享类型
+├── scripts/         # 构建脚本
 ├── wiki-docs/       # 策划案文档
-├── tests/           # 单元测试
-└── docs/            # 项目文档
+└── tests/           # 前端单元测试
 ```
 
 ## 测试
@@ -146,13 +136,12 @@ bun test
 
 | 层 | 选型 |
 |----|------|
-| 运行时 | Bun |
-| 后端框架 | Hono |
+| 后端 | Go (net/http) |
 | 前端框架 | Vue 3 + Vite |
 | 状态管理 | Pinia |
 | Markdown 渲染 | markdown-it |
 | 通信 | REST + WebSocket |
-| 打包 | Bun compile |
+| 打包 | Go embed |
 
 ## License
 

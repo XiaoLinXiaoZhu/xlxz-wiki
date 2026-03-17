@@ -16,17 +16,15 @@
     "noUnusedParameters": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@shared/*": ["./shared/*"],
-      "@server/*": ["./server/*"]
+      "@shared/*": ["./shared/*"]
     },
-    "types": ["bun", "vite/client"]
+    "types": ["vite/client"]
   },
   "include": [
     "src/**/*.ts",
     "src/**/*.vue",
     "src/**/*.d.ts",
     "shared/**/*.ts",
-    "server/**/*.ts",
     "vite.config.ts"
   ],
   "exclude": [

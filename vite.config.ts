@@ -15,7 +15,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    // 开发时代理 API 请求到 Hono 后端
+    // 开发时代理 API 请求到 Go 后端
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:3055',
@@ -29,7 +29,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    // 生产环境由 Hono 提供静态文件服务
+    // 生产环境由 Go 服务器提供静态文件服务
     emptyOutDir: true,
   },
 })

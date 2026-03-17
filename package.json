@@ -19,6 +19,7 @@
     "markdown-it-task-lists": "^2.1.1",
     "mermaid": "^11.12.2",
     "pinia": "^3.0.4",
+    "pinyin-pro": "^3.28.0",
     "vue": "^3.5.27",
     "vue-router": "^4.6.4"
   },

@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:debug": "vite build --mode debug",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
     "release": "bun run scripts/release.ts",

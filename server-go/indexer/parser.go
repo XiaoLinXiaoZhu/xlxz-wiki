@@ -8,10 +8,10 @@ import (
 
 var (
 	// frontmatter 正则
-	frontmatterRe = regexp.MustCompile(`(?s)^---\n(.+?)\n---`)
+	frontmatterRe = regexp.MustCompile(`(?s)^---\r?\n(.+?)\r?\n---`)
 	
 	// 文件内定义：【词条】：定义内容
-	inlineDefRe = regexp.MustCompile(`【([^】]+)】[：:]\s*(.+?)(?:\n|$)`)
+	inlineDefRe = regexp.MustCompile(`【([^】]+)】[：:]\s*(.+?)(?:\r?\n|$)`)
 	
 	// 策划公式：%% 表达式 %%
 	formulaRe = regexp.MustCompile(`%%\s*(.+?)\s*%%`)
@@ -123,12 +123,33 @@ func parseFrontmatter(text string) map[string]string {
 	}
 
 	fm := make(map[string]string)
-	lines := strings.Split(match[1], "\n")
+	content := strings.ReplaceAll(match[1], "\r\n", "\n")
+	lines := strings.Split(content, "\n")
+	var currentKey string
+
 	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+
+		// YAML 数组项：以 "- " 开头（属于上一个 key）
+		if strings.HasPrefix(trimmed, "- ") && currentKey != "" {
+			item := strings.TrimSpace(strings.TrimPrefix(trimmed, "-"))
+			if existing := fm[currentKey]; existing != "" {
+				fm[currentKey] = existing + "," + item
+			} else {
+				fm[currentKey] = item
+			}
+			continue
+		}
+
+		// 普通 key: value
 		parts := strings.SplitN(line, ":", 2)
 		if len(parts) == 2 {
 			key := strings.TrimSpace(parts[0])
 			value := strings.TrimSpace(parts[1])
+			currentKey = key
 			fm[key] = value
 		}
 	}
@@ -143,6 +164,7 @@ var moreTagRe = regexp.MustCompile(`(?i)^\s*<!--\s*more\s*-->\s*$`)
 func extractDefinition(text string) (string, bool) {
 	// 移除 frontmatter
 	text = frontmatterRe.ReplaceAllString(text, "")
+	text = strings.ReplaceAll(text, "\r\n", "\n")
 	
 	lines := strings.Split(text, "\n")
 	var contentLines []string

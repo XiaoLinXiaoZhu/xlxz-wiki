@@ -61,3 +61,37 @@ export interface FileTreeNode {
   /** 当存在同名文件夹和同名 .md 文件时，该字段记录被合并的 .md 文件路径 */
   readmePath?: string
 }
+
+/** ─── 审校批注 ─────────────────────────────────────────── */
+
+/** 单条批注 */
+export interface Annotation {
+  /** 唯一标识 */
+  id: string
+  /** 选中的原文文本 */
+  selectedText: string
+  /** 批注/建议内容 */
+  comment: string
+  /** 选区在文档中的起始偏移（基于纯文本） */
+  startOffset: number
+  /** 选区在文档中的结束偏移（基于纯文本） */
+  endOffset: number
+  /** 选区所在的最近块级元素的 data-line 行号 */
+  anchorLine: number | null
+  /** 批注状态 */
+  status: 'open' | 'resolved' | 'rejected'
+  /** 创建时间（ISO 8601） */
+  createdAt: string
+  /** 更新时间（ISO 8601） */
+  updatedAt: string
+}
+
+/** 单个文档的批注集合（持久化 JSON 格式） */
+export interface AnnotationFile {
+  /** JSON schema 版本，便于后续升级 */
+  version: 1
+  /** 文档路径（相对于 wiki-docs/） */
+  filePath: string
+  /** 批注列表 */
+  annotations: Annotation[]
+}

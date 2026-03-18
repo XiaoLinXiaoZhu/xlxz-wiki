@@ -4,7 +4,13 @@
     <div class="main-layout__content">
       <Header class="main-layout__header" />
       <main class="main-layout__main">
-        <router-view />
+        <div class="main-layout__doc-area" :class="{ 'main-layout__doc-area--with-panel': store.mode === 'review' }">
+          <router-view />
+        </div>
+        <AnnotationPanel
+          v-if="store.mode === 'review'"
+          class="main-layout__annotation-panel"
+        />
       </main>
     </div>
   </div>
@@ -13,6 +19,10 @@
 <script setup lang="ts">
 import Sidebar from './Sidebar.vue'
 import Header from './Header.vue'
+import AnnotationPanel from '@/components/review/AnnotationPanel.vue'
+import { useWikiStore } from '@/stores/wiki'
+
+const store = useWikiStore()
 </script>
 
 <style scoped>
@@ -43,10 +53,20 @@ import Header from './Header.vue'
 
 .main-layout__main {
   flex: 1;
+  overflow: hidden;
+  display: flex;
+}
+
+.main-layout__doc-area {
+  flex: 1;
   overflow-y: auto;
   padding: 32px 48px;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.main-layout__doc-area--with-panel {
+  padding-right: 24px;
 }
 </style>

@@ -4,7 +4,7 @@
       <h2 class="sidebar__title">📖 XLXZ Wiki</h2>
     </div>
     <div class="sidebar__tree">
-      <div v-if="store.fileTree.length === 0" class="sidebar__empty">
+      <div v-if="!store.fileTree || store.fileTree.length === 0" class="sidebar__empty">
         加载中...
       </div>
       <FileTreeItem

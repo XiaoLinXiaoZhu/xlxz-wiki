@@ -62,7 +62,7 @@ export const useWikiStore = defineStore('wiki', () => {
   async function fetchFileTree() {
     try {
       const res = await fetch('/api/files')
-      fileTree.value = await res.json()
+      fileTree.value = (await res.json()) ?? []
     } catch (err) {
       console.error('[Store] 获取文件树失败:', err)
     }

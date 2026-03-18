@@ -258,10 +258,10 @@ func buildFileTree(rootDir, relativePath string) []*FileTreeNode {
 	fullPath := filepath.Join(rootDir, relativePath)
 	entries, err := os.ReadDir(fullPath)
 	if err != nil {
-		return nil
+		return []*FileTreeNode{}
 	}
 
-	var nodes []*FileTreeNode
+	nodes := make([]*FileTreeNode, 0)
 	for _, entry := range entries {
 		name := entry.Name()
 		if strings.HasPrefix(name, ".") {

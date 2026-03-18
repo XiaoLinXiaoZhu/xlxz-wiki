@@ -23,6 +23,9 @@ import (
 //go:embed dist/* dist/assets/*
 var distFS embed.FS
 
+// 版本号，通过 -ldflags 在编译时注入
+var Version = "dev"
+
 var (
 	wikiDocsDir string
 	idx         *indexer.WikiIndexer
@@ -53,6 +56,7 @@ func main() {
 	http.HandleFunc("/api/file", handleFile)
 	http.HandleFunc("/api/files", handleFiles)
 	http.HandleFunc("/api/search", handleSearch)
+	http.HandleFunc("/api/version", handleVersion)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(hub, w, r)
 	})
@@ -110,10 +114,11 @@ func main() {
 ║         XLXZ Wiki v4 服务器已启动         ║
 ║              (Go Edition)                ║
 ╠══════════════════════════════════════════╣
+║  版本: v%s
 ║  地址: http://127.0.0.1:%d
 ║  文档: %s
 ╚══════════════════════════════════════════╝
-`, port, wikiDocsDir)
+`, Version, port, wikiDocsDir)
 
 	// Windows 下自动打开浏览器
 	if runtime.GOOS == "windows" {
@@ -184,6 +189,11 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	results := idx.Search(q)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(results)
+}
+
+func handleVersion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"version": Version})
 }
 
 // 辅助函数

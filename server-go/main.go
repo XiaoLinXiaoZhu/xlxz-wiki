@@ -252,6 +252,7 @@ type FileTreeNode struct {
 	Path        string          `json:"path"`
 	IsDirectory bool            `json:"isDirectory"`
 	Children    []*FileTreeNode `json:"children,omitempty"`
+	ReadmePath  string          `json:"readmePath,omitempty"`
 }
 
 func buildFileTree(rootDir, relativePath string) []*FileTreeNode {
@@ -283,5 +284,26 @@ func buildFileTree(rootDir, relativePath string) []*FileTreeNode {
 
 		nodes = append(nodes, node)
 	}
-	return nodes
+
+	// 合并同名目录和 .md 文件
+	dirMap := make(map[string]*FileTreeNode)
+	for _, node := range nodes {
+		if node.IsDirectory {
+			dirMap[node.Name] = node
+		}
+	}
+
+	filteredNodes := make([]*FileTreeNode, 0, len(nodes))
+	for _, node := range nodes {
+		if !node.IsDirectory && strings.HasSuffix(node.Name, ".md") {
+			dirName := strings.TrimSuffix(node.Name, ".md")
+			if dirNode, exists := dirMap[dirName]; exists {
+				dirNode.ReadmePath = node.Path
+				continue // 跳过该 .md 文件节点，不加入最终列表
+			}
+		}
+		filteredNodes = append(filteredNodes, node)
+	}
+
+	return filteredNodes
 }

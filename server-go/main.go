@@ -71,6 +71,7 @@ func main() {
 	http.HandleFunc("/api/files", handleFiles)
 	http.HandleFunc("/api/search", handleSearch)
 	http.HandleFunc("/api/version", handleVersion)
+	http.HandleFunc("/api/annotations", handleAnnotations)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(hub, w, r)
 	})
@@ -208,6 +209,71 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 func handleVersion(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"version": Version})
+}
+
+func handleAnnotations(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Query().Get("path")
+	if path == "" {
+		http.Error(w, "缺少 path 参数", 400)
+		return
+	}
+
+	// 批注存储目录：wiki-docs/.annotations/
+	annotationsDir := filepath.Join(wikiDocsDir, ".annotations")
+
+	// 将文档路径转为批注文件名：a/b/c.md → a_b_c.json
+	annotationFileName := strings.ReplaceAll(path, "/", "_")
+	annotationFileName = strings.ReplaceAll(annotationFileName, "\\", "_")
+	if strings.HasSuffix(annotationFileName, ".md") {
+		annotationFileName = annotationFileName[:len(annotationFileName)-3]
+	}
+	annotationFileName += ".json"
+
+	annotationPath := filepath.Join(annotationsDir, annotationFileName)
+
+	// 安全检查
+	if !strings.HasPrefix(annotationPath, annotationsDir) {
+		http.Error(w, "非法路径", 403)
+		return
+	}
+
+	if r.Method == "POST" {
+		// 确保目录存在
+		if err := os.MkdirAll(annotationsDir, 0755); err != nil {
+			http.Error(w, "创建目录失败: "+err.Error(), 500)
+			return
+		}
+
+		// 读取请求体并格式化写入
+		var body json.RawMessage
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "无效的请求体", 400)
+			return
+		}
+
+		// 格式化 JSON（便于人类阅读和 agent 解析）
+		var formatted []byte
+		formatted, err := json.MarshalIndent(json.RawMessage(body), "", "  ")
+		if err != nil {
+			formatted = body
+		}
+
+		if err := os.WriteFile(annotationPath, formatted, 0644); err != nil {
+			http.Error(w, "写入失败: "+err.Error(), 500)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]bool{"success": true})
+	} else {
+		// 读取批注文件
+		content, err := os.ReadFile(annotationPath)
+		if err != nil {
+			http.Error(w, "批注不存在", 404)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Write(content)
+	}
 }
 
 // 辅助函数

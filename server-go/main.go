@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/fs"
 	"log"
@@ -33,9 +34,22 @@ var (
 )
 
 func main() {
+	// 解析命令行参数
+	docsFlag := flag.String("docs", "", "wiki 文档目录路径")
+	flag.Parse()
+
 	// 解析路径
 	rootDir, _ := os.Getwd()
-	wikiDocsDir = filepath.Join(rootDir, "wiki-docs")
+	if *docsFlag != "" {
+		// 支持相对路径和绝对路径
+		if filepath.IsAbs(*docsFlag) {
+			wikiDocsDir = *docsFlag
+		} else {
+			wikiDocsDir = filepath.Join(rootDir, *docsFlag)
+		}
+	} else {
+		wikiDocsDir = filepath.Join(rootDir, "wiki-docs")
+	}
 	distDir := filepath.Join(rootDir, "dist")
 
 	// 初始化 WebSocket Hub

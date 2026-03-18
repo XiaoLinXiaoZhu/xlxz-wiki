@@ -11,9 +11,12 @@ import { readFileSync } from 'fs'
 
 const ROOT = resolve(import.meta.dir, '..')
 const GO_DIR = resolve(ROOT, 'server-go')
+const WIKI_DOCS = resolve(ROOT, 'wiki-docs')
 
 const pkg = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf8'))
 const version = pkg.version
+
+let viteProc: ReturnType<typeof spawn> | null = null
 
 console.log(`\n🚀 XLXZ Wiki 开发模式 (v${version})\n`)
 
@@ -21,7 +24,7 @@ console.log(`\n🚀 XLXZ Wiki 开发模式 (v${version})\n`)
 console.log('[Go] 启动后端...')
 const goProc = spawn(
   'go',
-  ['run', '-ldflags', `-X main.Version=${version}`, '.'],
+  ['run', '-ldflags', `"-X main.Version=${version}"`, '.', '-docs', WIKI_DOCS],
   {
     cwd: GO_DIR,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -51,7 +54,7 @@ await new Promise((r) => setTimeout(r, 2000))
 
 // 2. 启动 Vite 前端开发服务器
 console.log('[Vite] 启动前端开发服务器...')
-const viteProc = spawn('npx', ['vite'], {
+viteProc = spawn('npx', ['vite'], {
   cwd: ROOT,
   stdio: ['ignore', 'pipe', 'pipe'],
   shell: true,

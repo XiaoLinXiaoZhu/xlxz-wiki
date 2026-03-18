@@ -62,10 +62,19 @@ watch(
   async (path) => {
     if (path) {
       const filePath = Array.isArray(path) ? path.join('/') : path
-      // 切换文件时退出编辑模式
-      store.mode = 'readonly'
-      annotationStore.clear()
+      // 切换文件时：编辑模式退回只读，审校模式保持
+      if (store.mode === 'edit') {
+        store.mode = 'readonly'
+      }
+      // 关闭弹窗
+      popupVisible.value = false
       await store.loadFile(filePath)
+      // 审校模式下自动加载新文件的批注
+      if (store.mode === 'review') {
+        await annotationStore.loadAnnotations(filePath)
+      } else {
+        annotationStore.clear()
+      }
       // 文件加载完成后，处理行号 hash 跳转
       await nextTick()
       scrollToLine()

@@ -5,7 +5,8 @@
   "description": "游戏策划案专用 Wiki 文档系统 — Markdown 词条引用 + 悬停定义卡片",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "bun run scripts/dev.ts",
+    "dev:frontend": "vite",
     "build": "vite build",
     "build:debug": "vite build --mode debug",
     "preview": "vite preview",

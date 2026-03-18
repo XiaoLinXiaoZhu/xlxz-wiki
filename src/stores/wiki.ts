@@ -26,7 +26,7 @@ export const useWikiStore = defineStore('wiki', () => {
   const currentScope = ref('')
 
   /** 模式：只读 / 编辑 */
-  const mode = ref<'readonly' | 'edit'>('readonly')
+  const mode = ref<'readonly' | 'edit' | 'review'>('readonly')
 
   /** 编辑中的内容（与 currentContent 分离，避免实时同步到只读视图） */
   const editingContent = ref('')

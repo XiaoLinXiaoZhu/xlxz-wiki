@@ -21,11 +21,12 @@ function run(cmd: string, cwd: string = ROOT) {
 }
 
 function main() {
+  const isDebug = process.argv.includes('--debug')
   console.log('=== 发布脚本 ===\n')
 
   // 1. 构建前端
-  console.log('[1/3] 构建前端...')
-  run('pnpm build')
+  console.log(`[1/3] 构建前端${isDebug ? '（debug 模式：不压缩不混淆）' : ''}...`)
+  run(isDebug ? 'pnpm build:debug' : 'pnpm build')
 
   // 2. 复制 dist 到 server-go/dist
   console.log('\n[2/3] 复制 dist 到 server-go/dist...')
@@ -41,6 +42,9 @@ function main() {
 
   console.log('\n=== 发布完成 ===')
   console.log('输出: xlxz-wiki.exe')
+  if (isDebug) {
+    console.log('（debug 模式：未压缩未混淆，便于定位问题）')
+  }
 }
 
 main()

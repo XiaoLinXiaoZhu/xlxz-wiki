@@ -23,6 +23,9 @@ import (
 //go:embed dist/* dist/assets/*
 var distFS embed.FS
 
+// 版本号，通过 -ldflags 在编译时注入
+var Version = "dev"
+
 var (
 	wikiDocsDir string
 	idx         *indexer.WikiIndexer
@@ -53,6 +56,7 @@ func main() {
 	http.HandleFunc("/api/file", handleFile)
 	http.HandleFunc("/api/files", handleFiles)
 	http.HandleFunc("/api/search", handleSearch)
+	http.HandleFunc("/api/version", handleVersion)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(hub, w, r)
 	})
@@ -110,10 +114,11 @@ func main() {
 ║         XLXZ Wiki v4 服务器已启动         ║
 ║              (Go Edition)                ║
 ╠══════════════════════════════════════════╣
+║  版本: v%s
 ║  地址: http://127.0.0.1:%d
 ║  文档: %s
 ╚══════════════════════════════════════════╝
-`, port, wikiDocsDir)
+`, Version, port, wikiDocsDir)
 
 	// Windows 下自动打开浏览器
 	if runtime.GOOS == "windows" {
@@ -186,6 +191,11 @@ func handleSearch(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(results)
 }
 
+func handleVersion(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"version": Version})
+}
+
 // 辅助函数
 func hasEmbeddedDist() bool {
 	_, err := distFS.ReadFile("dist/index.html")
@@ -252,6 +262,7 @@ type FileTreeNode struct {
 	Path        string          `json:"path"`
 	IsDirectory bool            `json:"isDirectory"`
 	Children    []*FileTreeNode `json:"children,omitempty"`
+	ReadmePath  string          `json:"readmePath,omitempty"`
 }
 
 func buildFileTree(rootDir, relativePath string) []*FileTreeNode {
@@ -283,5 +294,26 @@ func buildFileTree(rootDir, relativePath string) []*FileTreeNode {
 
 		nodes = append(nodes, node)
 	}
-	return nodes
+
+	// 合并同名目录和 .md 文件
+	dirMap := make(map[string]*FileTreeNode)
+	for _, node := range nodes {
+		if node.IsDirectory {
+			dirMap[node.Name] = node
+		}
+	}
+
+	filteredNodes := make([]*FileTreeNode, 0, len(nodes))
+	for _, node := range nodes {
+		if !node.IsDirectory && strings.HasSuffix(node.Name, ".md") {
+			dirName := strings.TrimSuffix(node.Name, ".md")
+			if dirNode, exists := dirMap[dirName]; exists {
+				dirNode.ReadmePath = node.Path
+				continue // 跳过该 .md 文件节点，不加入最终列表
+			}
+		}
+		filteredNodes = append(filteredNodes, node)
+	}
+
+	return filteredNodes
 }

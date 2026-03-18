@@ -37,6 +37,18 @@ export const useWikiStore = defineStore('wiki', () => {
   /** 加载状态 */
   const loading = ref(false)
 
+  /** 前端版本号（构建时注入） */
+  const frontendVersion = ref(__APP_VERSION__)
+
+  /** 后端版本号（运行时从 API 获取） */
+  const backendVersion = ref('')
+
+  /** 版本不匹配警告 */
+  const versionMismatch = computed(() => {
+    if (!backendVersion.value) return false
+    return frontendVersion.value !== backendVersion.value
+  })
+
   // ─── 计算属性 ─────────────────────────────────────────────
 
   /** 当前文件名 */
@@ -65,6 +77,22 @@ export const useWikiStore = defineStore('wiki', () => {
       fileTree.value = (await res.json()) ?? []
     } catch (err) {
       console.error('[Store] 获取文件树失败:', err)
+    }
+  }
+
+  /** 检查后端版本号 */
+  async function checkVersion() {
+    try {
+      const res = await fetch('/api/version')
+      const data = await res.json()
+      backendVersion.value = data.version
+      if (frontendVersion.value !== data.version) {
+        console.warn(
+          `[Store] 版本不匹配！前端: v${frontendVersion.value}, 后端: v${data.version}`,
+        )
+      }
+    } catch (err) {
+      console.error('[Store] 获取后端版本失败:', err)
     }
   }
 
@@ -125,11 +153,15 @@ export const useWikiStore = defineStore('wiki', () => {
     editingContent,
     saveRequestId,
     loading,
+    frontendVersion,
+    backendVersion,
+    versionMismatch,
     // 计算属性
     currentFileName,
     // 操作
     fetchIndex,
     fetchFileTree,
+    checkVersion,
     loadFile,
     updateIndex,
     requestSave,

@@ -2,9 +2,12 @@
   <header class="wiki-header">
     <div class="wiki-header__title">
       <span v-if="store.currentFile" class="wiki-header__path">{{ store.currentFile }}</span>
-      <span v-else class="wiki-header__path">XLXZ Wiki v4</span>
+      <span v-else class="wiki-header__path">XLXZ Wiki v{{ store.frontendVersion }}</span>
     </div>
     <div class="wiki-header__actions">
+      <span v-if="store.versionMismatch" class="wiki-header__version-warn" :title="`前端: v${store.frontendVersion}\n后端: v${store.backendVersion}`">
+        ⚠️ 版本不匹配
+      </span>
       <template v-if="store.currentFile">
         <button
           v-if="store.mode === 'readonly'"
@@ -108,5 +111,15 @@ const store = useWikiStore()
 
 .wiki-header__btn--cancel:hover {
   background: #ffeef0;
+}
+
+.wiki-header__version-warn {
+  font-size: 12px;
+  color: #b08800;
+  background: #fff8c5;
+  padding: 2px 8px;
+  border: 1px solid #f0d000;
+  border-radius: 4px;
+  cursor: help;
 }
 </style>

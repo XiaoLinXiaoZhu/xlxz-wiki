@@ -1,14 +1,19 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import { readFileSync } from 'fs'
 
 export default defineConfig(({ mode }) => {
   const isDebug = mode === 'debug'
+  const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf8'))
 
   return {
     plugins: [
       vue(),
     ],
+    define: {
+      __APP_VERSION__: JSON.stringify(pkg.version),
+    },
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),

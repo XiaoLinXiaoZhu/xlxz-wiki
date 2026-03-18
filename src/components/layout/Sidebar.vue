@@ -27,6 +27,7 @@ const store = useWikiStore()
 onMounted(() => {
   store.fetchFileTree()
   store.fetchIndex()
+  store.checkVersion()
 })
 </script>
 

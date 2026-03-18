@@ -6,12 +6,14 @@
       :class="{
         'tree-item--dir': node.isDirectory,
         'tree-item--file': !node.isDirectory,
-        'tree-item--active': !node.isDirectory && store.currentFile === node.path,
+        'tree-item--active': (!node.isDirectory && store.currentFile === node.path) || (node.readmePath && store.currentFile === node.readmePath),
+        'tree-item--has-readme': node.readmePath,
       }"
       @click="handleClick"
     >
       <span class="tree-item__icon">{{ node.isDirectory ? (expanded ? '📂' : '📁') : '📄' }}</span>
       <span class="tree-item__name">{{ node.name }}</span>
+      <span v-if="node.readmePath" class="tree-item__badge">📝</span>
     </div>
     <div v-if="node.isDirectory && expanded && node.children">
       <FileTreeItem
@@ -42,6 +44,9 @@ const expanded = ref(props.node.isDirectory)
 function handleClick() {
   if (props.node.isDirectory) {
     expanded.value = !expanded.value
+    if (props.node.readmePath) {
+      router.push(`/doc/${props.node.readmePath}`)
+    }
   } else {
     router.push(`/doc/${props.node.path}`)
   }
@@ -78,5 +83,11 @@ function handleClick() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tree-item__badge {
+  font-size: 12px;
+  flex-shrink: 0;
+  opacity: 0.6;
 }
 </style>

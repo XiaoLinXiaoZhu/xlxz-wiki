@@ -8,7 +8,7 @@
  * 3. 编译 Go 可执行文件到项目根目录
  */
 import { execSync } from 'child_process'
-import { cpSync, rmSync, existsSync } from 'fs'
+import { cpSync, rmSync, existsSync, readFileSync } from 'fs'
 
 const ROOT = process.cwd()
 const DIST_DIR = './dist'
@@ -22,6 +22,9 @@ function run(cmd: string, cwd: string = ROOT) {
 
 function main() {
   const isDebug = process.argv.includes('--debug')
+  const pkg = JSON.parse(readFileSync('./package.json', 'utf8'))
+  const version = pkg.version
+  console.log(`版本: v${version}`)
   console.log('=== 发布脚本 ===\n')
 
   // 1. 构建前端
@@ -38,7 +41,7 @@ function main() {
 
   // 3. 编译 Go
   console.log('\n[3/3] 编译 Go 可执行文件...')
-  run('go build -o ../xlxz-wiki.exe', GO_DIR)
+  run(`go build -ldflags "-X main.Version=${version}" -o ../xlxz-wiki.exe`, GO_DIR)
 
   console.log('\n=== 发布完成 ===')
   console.log('输出: xlxz-wiki.exe')

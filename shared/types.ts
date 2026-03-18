@@ -58,4 +58,6 @@ export interface FileTreeNode {
   path: string
   isDirectory: boolean
   children?: FileTreeNode[]
+  /** 当存在同名文件夹和同名 .md 文件时，该字段记录被合并的 .md 文件路径 */
+  readmePath?: string
 }

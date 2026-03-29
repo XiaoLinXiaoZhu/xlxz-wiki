@@ -35,18 +35,20 @@ func ParseFile(fullPath, relPath string) ([]*WikiTerm, []*WikiFormula, string) {
 	var formulas []*WikiFormula
 	var scope string
 
-	// 解析 frontmatter
+	// 解析 frontmatter（可选）
 	fm := parseFrontmatter(text)
 	if fm != nil {
 		scope = fm["scope"]
-		
-		// 从 frontmatter 创建词条
-		term := strings.TrimSuffix(relPath, ".md")
-		if idx := strings.LastIndex(term, "/"); idx != -1 {
-			term = term[idx+1:]
-		}
-		
-		aliases := []string{term}
+	}
+
+	// 从文件名创建词条（无论是否有 frontmatter）
+	term := strings.TrimSuffix(relPath, ".md")
+	if idx := strings.LastIndex(term, "/"); idx != -1 {
+		term = term[idx+1:]
+	}
+
+	aliases := []string{term}
+	if fm != nil {
 		if aliasStr, ok := fm["alias"]; ok {
 			for _, a := range strings.Split(aliasStr, ",") {
 				a = strings.TrimSpace(a)
@@ -55,21 +57,21 @@ func ParseFile(fullPath, relPath string) ([]*WikiTerm, []*WikiFormula, string) {
 				}
 			}
 		}
+	}
 
-		// 提取定义（支持 <!-- more --> 截断）
-		definition, hasMore := extractDefinition(text)
+	// 提取定义（支持 <!-- more --> 截断）
+	definition, hasMore := extractDefinition(text)
 
-		if definition != "" {
-			terms = append(terms, &WikiTerm{
-				Term:           term,
-				Aliases:        aliases,
-				Definition:     definition,
-				Scope:          scope,
-				FilePath:       relPath,
-				DefinitionType: "file",
-				HasMore:        hasMore,
-			})
-		}
+	if definition != "" {
+		terms = append(terms, &WikiTerm{
+			Term:           term,
+			Aliases:        aliases,
+			Definition:     definition,
+			Scope:          scope,
+			FilePath:       relPath,
+			DefinitionType: "file",
+			HasMore:        hasMore,
+		})
 	}
 
 	// 解析文件内定义

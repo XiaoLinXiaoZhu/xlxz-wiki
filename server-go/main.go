@@ -71,6 +71,7 @@ func main() {
 	http.HandleFunc("/api/files", handleFiles)
 	http.HandleFunc("/api/search", handleSearch)
 	http.HandleFunc("/api/version", handleVersion)
+	http.HandleFunc("/api/debug/index", handleDebugIndex)
 	http.HandleFunc("/api/annotations", handleAnnotations)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		ws.ServeWs(hub, w, r)
@@ -274,6 +275,38 @@ func handleAnnotations(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Write(content)
 	}
+}
+
+func handleDebugIndex(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	index := idx.GetIndex()
+
+	type debugInfo struct {
+		TermCount    int                 `json:"termCount"`
+		FormulaCount int                 `json:"formulaCount"`
+		Scopes       []string            `json:"scopes"`
+		BuildTime    int64               `json:"buildTime"`
+		Terms        map[string][]string `json:"terms"`
+	}
+
+	// 简化词条信息：alias → [filePath, ...]
+	termsSimple := make(map[string][]string)
+	for alias, defs := range index.Terms {
+		var files []string
+		for _, d := range defs {
+			files = append(files, fmt.Sprintf("%s (%s)", d.FilePath, d.DefinitionType))
+		}
+		termsSimple[alias] = files
+	}
+
+	info := debugInfo{
+		TermCount:    len(index.Terms),
+		FormulaCount: len(index.Formulas),
+		Scopes:       index.Scopes,
+		BuildTime:    index.BuildTime,
+		Terms:        termsSimple,
+	}
+	json.NewEncoder(w).Encode(info)
 }
 
 // 辅助函数

@@ -6,11 +6,16 @@
       <p>请从左侧文件树中选择一个文档查看。</p>
     </div>
     <div v-else class="doc-view__content">
-      <!-- 只读模式 -->
-      <MarkdownViewer
-        v-if="store.mode === 'readonly'"
-        :content="store.currentContent"
-      />
+      <!-- 只读模式 & 审校模式 -->
+      <div
+        v-if="store.mode === 'readonly' || store.mode === 'review'"
+        class="doc-view__viewer-wrap"
+        :class="{ 'doc-view__viewer-wrap--review': store.mode === 'review' }"
+        ref="viewerWrapRef"
+        @mouseup="handleMouseUp"
+      >
+        <MarkdownViewer :content="store.currentContent" />
+      </div>
       <!-- 编辑模式 -->
       <MarkdownEditor
         v-else
@@ -18,28 +23,58 @@
         @update:content="store.editingContent = $event"
         @save="handleSave"
       />
+      <!-- 批注输入弹窗 -->
+      <AnnotationPopup
+        :visible="popupVisible"
+        :selected-text="popupSelectedText"
+        :position="popupPosition"
+        @submit="handleAnnotationSubmit"
+        @cancel="popupVisible = false"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { watch, nextTick } from 'vue'
+import { watch, nextTick, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useWikiStore } from '@/stores/wiki'
+import { useAnnotationStore } from '@/stores/annotation'
 import MarkdownViewer from '@/components/viewer/MarkdownViewer.vue'
 import MarkdownEditor from '@/components/editor/MarkdownEditor.vue'
+import AnnotationPopup from '@/components/review/AnnotationPopup.vue'
 
 const route = useRoute()
 const store = useWikiStore()
+const annotationStore = useAnnotationStore()
+const viewerWrapRef = ref<HTMLElement | null>(null)
+
+// ─── 批注弹窗状态 ─────────────────────────────────────────
+const popupVisible = ref(false)
+const popupSelectedText = ref('')
+const popupPosition = ref({ x: 0, y: 0 })
+const popupStartOffset = ref(0)
+const popupEndOffset = ref(0)
+const popupAnchorLine = ref<number | null>(null)
 
 watch(
   () => route.params.path,
   async (path) => {
     if (path) {
       const filePath = Array.isArray(path) ? path.join('/') : path
-      // 切换文件时退出编辑模式
-      store.mode = 'readonly'
+      // 切换文件时：编辑模式退回只读，审校模式保持
+      if (store.mode === 'edit') {
+        store.mode = 'readonly'
+      }
+      // 关闭弹窗
+      popupVisible.value = false
       await store.loadFile(filePath)
+      // 审校模式下自动加载新文件的批注
+      if (store.mode === 'review') {
+        await annotationStore.loadAnnotations(filePath)
+      } else {
+        annotationStore.clear()
+      }
       // 文件加载完成后，处理行号 hash 跳转
       await nextTick()
       scrollToLine()
@@ -99,6 +134,12 @@ watch(
     if (mode === 'edit') {
       store.editingContent = store.currentContent
     }
+    if (mode === 'review' && store.currentFile) {
+      annotationStore.loadAnnotations(store.currentFile)
+    }
+    if (mode !== 'review') {
+      popupVisible.value = false
+    }
   },
 )
 
@@ -143,6 +184,98 @@ async function handleSave() {
   } catch (err) {
     console.error('[DocView] 保存失败:', err)
   }
+}
+
+/** 处理审校模式下的文本选择 */
+function handleMouseUp() {
+  if (store.mode !== 'review') return
+
+  const selection = window.getSelection()
+  if (!selection || selection.isCollapsed || !selection.rangeCount) {
+    return
+  }
+
+  const selectedText = selection.toString().trim()
+  if (!selectedText) return
+
+  const range = selection.getRangeAt(0)
+
+  // 确保选区在 viewer 内部
+  if (!viewerWrapRef.value?.contains(range.commonAncestorContainer)) {
+    return
+  }
+
+  // 计算选区在文档纯文本中的偏移量
+  const { startOffset, endOffset } = getTextOffsets(range)
+
+  // 获取最近的 data-line 行号
+  const anchorLine = getAnchorLine(range.startContainer)
+
+  // 计算弹窗位置（选区下方居中）
+  const rect = range.getBoundingClientRect()
+  const x = rect.left + rect.width / 2
+  const y = rect.bottom + 8
+
+  popupSelectedText.value = selectedText
+  popupStartOffset.value = startOffset
+  popupEndOffset.value = endOffset
+  popupAnchorLine.value = anchorLine
+  popupPosition.value = { x, y }
+  popupVisible.value = true
+}
+
+/** 计算选区在 viewer 纯文本中的偏移量 */
+function getTextOffsets(range: Range): { startOffset: number; endOffset: number } {
+  if (!viewerWrapRef.value) return { startOffset: 0, endOffset: 0 }
+
+  const treeWalker = document.createTreeWalker(
+    viewerWrapRef.value,
+    NodeFilter.SHOW_TEXT,
+  )
+
+  let offset = 0
+  let startOffset = 0
+  let endOffset = 0
+  let node: Node | null
+
+  while ((node = treeWalker.nextNode())) {
+    const textNode = node as Text
+    if (node === range.startContainer) {
+      startOffset = offset + range.startOffset
+    }
+    if (node === range.endContainer) {
+      endOffset = offset + range.endOffset
+      break
+    }
+    offset += textNode.length
+  }
+
+  return { startOffset, endOffset }
+}
+
+/** 获取最近的 data-line 属性值 */
+function getAnchorLine(node: Node): number | null {
+  let el: HTMLElement | null = node instanceof HTMLElement ? node : node.parentElement
+  while (el && el !== viewerWrapRef.value) {
+    const line = el.getAttribute('data-line')
+    if (line) return parseInt(line, 10)
+    el = el.parentElement
+  }
+  return null
+}
+
+/** 提交批注 */
+async function handleAnnotationSubmit(comment: string) {
+  await annotationStore.addAnnotation(
+    popupSelectedText.value,
+    comment,
+    popupStartOffset.value,
+    popupEndOffset.value,
+    popupAnchorLine.value,
+  )
+  popupVisible.value = false
+  // 清除选区
+  window.getSelection()?.removeAllRanges()
 }
 
 /**
@@ -219,5 +352,18 @@ function extractFrontmatter(raw: string): string {
   background-color: #fff8c5;
   border-radius: 4px;
   transition: background-color 2s ease;
+}
+
+/* 审校模式样式 */
+.doc-view__viewer-wrap--review {
+  cursor: text;
+}
+
+.doc-view__viewer-wrap--review ::selection {
+  background: rgba(227, 98, 9, 0.2);
+}
+
+.doc-view__viewer-wrap--review :deep(::selection) {
+  background: rgba(227, 98, 9, 0.2);
 }
 </style>

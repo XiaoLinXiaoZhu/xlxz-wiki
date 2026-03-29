@@ -37,6 +37,10 @@ func Watch(rootDir string, idx *indexer.WikiIndexer, hub *ws.Hub) {
 			return nil
 		}
 		if info.IsDir() {
+			// 跳过隐藏目录（如 .annotations）
+			if path != rootDir && strings.HasPrefix(info.Name(), ".") {
+				return filepath.SkipDir
+			}
 			return watcher.Add(path)
 		}
 		return nil

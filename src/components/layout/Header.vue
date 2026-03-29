@@ -11,12 +11,19 @@
       <template v-if="store.currentFile">
         <button
           v-if="store.mode === 'readonly'"
+          class="wiki-header__btn wiki-header__btn--review"
+          @click="store.mode = 'review'"
+        >
+          📝 审校
+        </button>
+        <button
+          v-if="store.mode === 'readonly'"
           class="wiki-header__btn wiki-header__btn--edit"
           @click="store.mode = 'edit'"
         >
           ✏️ 编辑
         </button>
-        <template v-else>
+        <template v-else-if="store.mode === 'edit'">
           <button
             class="wiki-header__btn wiki-header__btn--save"
             @click="store.requestSave()"
@@ -30,8 +37,16 @@
             ✕ 取消
           </button>
         </template>
+        <template v-else-if="store.mode === 'review'">
+          <button
+            class="wiki-header__btn wiki-header__btn--cancel"
+            @click="store.mode = 'readonly'"
+          >
+            ✕ 退出审校
+          </button>
+        </template>
       </template>
-      <span class="wiki-header__mode">{{ store.mode === 'readonly' ? '只读' : '编辑' }}</span>
+      <span class="wiki-header__mode">{{ store.mode === 'readonly' ? '只读' : store.mode === 'edit' ? '编辑' : '审校' }}</span>
     </div>
   </header>
 </template>
@@ -93,6 +108,15 @@ const store = useWikiStore()
 
 .wiki-header__btn--edit:hover {
   background: #f1f8ff;
+}
+
+.wiki-header__btn--review {
+  color: #e36209;
+  border-color: #e36209;
+}
+
+.wiki-header__btn--review:hover {
+  background: #fff8f0;
 }
 
 .wiki-header__btn--save {
